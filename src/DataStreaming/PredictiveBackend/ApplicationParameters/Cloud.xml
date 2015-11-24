@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/PredictiveBackend" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Parameters>
+      <Parameter Name="PublicGateway_InstanceCount" Value="-1" />
+      <Parameter Name="NotificationActorService_PartitionCount" Value="1" />
+      <Parameter Name="StockAggregatorService_PartitionCount" Value="1" />
+      <Parameter Name="StockAggregatorService_MinReplicaSetSize" Value="1" />
+      <Parameter Name="StockAggregatorService_TargetReplicaSetSize" Value="1" />
+      <Parameter Name="StockTrendPredictionActorService_PartitionCount" Value="3" />
+      <Parameter Name="StockTrendPredictionActorService_MinReplicaSetSize" Value="2" />
+      <Parameter Name="StockTrendPredictionActorService_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="StockService_PartitionCount" Value="8" />
+      <Parameter Name="StockService_MinReplicaSetSize" Value="2" />
+      <Parameter Name="StockService_TargetReplicaSetSize" Value="3" />
+      <Parameter Name="Logger" Value="DelegateLogger" />
+   </Parameters>
+</Application>

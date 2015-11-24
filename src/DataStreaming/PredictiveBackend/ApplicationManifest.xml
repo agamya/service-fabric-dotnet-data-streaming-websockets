@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="PredictiveBackendType" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+   <Parameters>
+      <Parameter Name="NotificationActorService_PartitionCount" DefaultValue="10" />
+      <Parameter Name="StockTrendPredictionActorService_PartitionCount" DefaultValue="10" />
+      <Parameter Name="StockTrendPredictionActorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="StockTrendPredictionActorService_TargetReplicaSetSize" DefaultValue="3" />
+      <Parameter Name="StockAggregatorService_PartitionCount" DefaultValue="1" />
+      <Parameter Name="StockAggregatorService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="StockAggregatorService_TargetReplicaSetSize" DefaultValue="3" />
+      <Parameter Name="StockService_PartitionCount" DefaultValue="10" />
+      <Parameter Name="StockService_MinReplicaSetSize" DefaultValue="2" />
+      <Parameter Name="StockService_TargetReplicaSetSize" DefaultValue="3" />
+      <Parameter Name="StockService_LowKey" DefaultValue="700" />
+      <Parameter Name="StockService_HighKey" DefaultValue="1000" />
+      <Parameter Name="PublicGateway_InstanceCount" DefaultValue="-1" />
+      <Parameter Name="Logger" DefaultValue="TraceLogger" />
+   </Parameters>
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="StockTrendPredictionActorPkg" ServiceManifestVersion="1.0.0" />
+      <ConfigOverrides>
+         <ConfigOverride Name="Config">
+            <Settings>
+               <Section Name="Logging">
+                  <Parameter Name="Logger" Value="[Logger]" />
+               </Section>
+            </Settings>
+         </ConfigOverride>
+      </ConfigOverrides>
+   </ServiceManifestImport>
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="StockAggregatorServicePkg" ServiceManifestVersion="1.0.0" />
+      <ConfigOverrides>
+         <ConfigOverride Name="Config">
+            <Settings>
+               <Section Name="Logging">
+                  <Parameter Name="Logger" Value="[Logger]" />
+               </Section>
+            </Settings>
+         </ConfigOverride>
+      </ConfigOverrides>
+   </ServiceManifestImport>
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="StockServicePkg" ServiceManifestVersion="1.0.0" />
+      <ConfigOverrides>
+         <ConfigOverride Name="Config">
+            <Settings>
+               <Section Name="Logging">
+                  <Parameter Name="Logger" Value="[Logger]" />
+               </Section>
+            </Settings>
+         </ConfigOverride>
+      </ConfigOverrides>
+   </ServiceManifestImport>
+   <ServiceManifestImport>
+      <ServiceManifestRef ServiceManifestName="PublicGatewayPkg" ServiceManifestVersion="1.0.0" />
+      <ConfigOverrides>
+         <ConfigOverride Name="Config">
+            <Settings>
+               <Section Name="Logging">
+                  <Parameter Name="Logger" Value="[Logger]" />
+               </Section>
+            </Settings>
+         </ConfigOverride>
+      </ConfigOverrides>
+   </ServiceManifestImport>
+   <DefaultServices>
+      <Service Name="NotificationActorService" GeneratedIdRef="4f99aaa0-45fa-492f-b3ac-b3478ff3ae8a">
+         <StatelessService ServiceTypeName="NotificationActorServiceType">
+            <UniformInt64Partition PartitionCount="[NotificationActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+         </StatelessService>
+      </Service>
+      <Service Name="StockTrendPredictionActorService" GeneratedIdRef="de0ea888-417e-4b06-8b21-1a1dbeb314cb">
+         <StatefulService ServiceTypeName="StockTrendPredictionActorServiceType" TargetReplicaSetSize="[StockTrendPredictionActorService_TargetReplicaSetSize]" MinReplicaSetSize="[StockTrendPredictionActorService_MinReplicaSetSize]">
+            <UniformInt64Partition PartitionCount="[StockTrendPredictionActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
+         </StatefulService>
+      </Service>
+      <Service Name="StockAggregatorService">
+         <StatefulService ServiceTypeName="StockAggregatorServiceType" TargetReplicaSetSize="[StockAggregatorService_TargetReplicaSetSize]" MinReplicaSetSize="[StockAggregatorService_MinReplicaSetSize]">
+            <UniformInt64Partition PartitionCount="[StockAggregatorService_PartitionCount]" LowKey="680" HighKey="999" />
+         </StatefulService>
+      </Service>
+      <Service Name="StockService">
+         <StatefulService ServiceTypeName="StockServiceType" TargetReplicaSetSize="[StockService_TargetReplicaSetSize]" MinReplicaSetSize="[StockService_MinReplicaSetSize]">
+            <UniformInt64Partition PartitionCount="[StockService_PartitionCount]" LowKey="[StockService_LowKey]" HighKey="[StockService_HighKey]" />
+         </StatefulService>
+      </Service>
+      <Service Name="PublicGateway">
+         <StatelessService ServiceTypeName="PublicGatewayType" InstanceCount="[PublicGateway_InstanceCount]">
+            <SingletonPartition />
+         </StatelessService>
+      </Service>
+   </DefaultServices>
+</ApplicationManifest>
