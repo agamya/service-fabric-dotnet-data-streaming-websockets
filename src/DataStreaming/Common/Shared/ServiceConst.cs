@@ -8,7 +8,8 @@ namespace Common.Shared
     public class ServiceConst
     {
         public const string DataApiWebsockets = "data";
-        public const string ListenerWebsockets = "Websocket1";
+        public const string ListenerRemoting = "Remoting1";
+        public const string ListenerWebsocket = "Websocket1";
         public const string ListenerOwin = "Owin1";
     }
 

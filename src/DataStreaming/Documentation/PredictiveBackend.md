@@ -6,7 +6,7 @@ This repository contains a sample project for Azure Service Fabric, the next-gen
 This document walks you through how to deploy a the Predict Backend application, which demonstrates how to integrate the real time flow of orders from an e-commerce site and leverage Service Fabric to provide Stock Trend predictions.  The following key concepts are demonstrated in this sample: 
 
 - Event streams: ingestion of data streams with ingress point exposed through Web Sockets.
-- Intra service communication (using ServiceProxy)
+- High-throughput service-to-service communication (using web sockets)
 - Machine learning on real-time data streams
 
 

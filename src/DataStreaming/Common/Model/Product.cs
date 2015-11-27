@@ -5,8 +5,6 @@
 
 namespace Common.Model
 {
-    using ProtoBuf;
-
     public class Product
     {
         public Product()

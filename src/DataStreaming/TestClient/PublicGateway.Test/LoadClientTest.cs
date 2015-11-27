@@ -150,21 +150,20 @@ namespace PublicGateway.Test
                         byte[] payload = await serializer.SerializeAsync(postProductModel);
 
                         // Websocket send & receive message spec
-                        MsgSpec mreq = new MsgSpec()
+                        WsRequestMessage mreq = new WsRequestMessage
                         {
+                            PartitionKey = productId,
                             Operation = WSOperations.AddItem,
-                            Key = MsgSpecKeys.Default,
                             Value = payload
                         };
 
-                        MsgSpec mresp = await websocketClient.SendReceiveAsync(mreq, CancellationToken.None);
-                        if (mresp.Key == MsgSpecKeys.Error)
+                        WsResponseMessage mresp = await websocketClient.SendReceiveAsync(mreq, CancellationToken.None);
+                        if (mresp.Result == WsResult.Error)
                             Console.WriteLine("Error: {0}", Encoding.UTF8.GetString(mresp.Value));
 
-                        string result = Encoding.UTF8.GetString(mresp.Value);
-                        if (!result.ToLower().Contains("success"))
+                        if (mresp.Result != WsResult.Success)
                             failedCounter++;
-
+                        
                         iterations++;
 
                         if (delayMs > -1 && iterations < iterationsMax)

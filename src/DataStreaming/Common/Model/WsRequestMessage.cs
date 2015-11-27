@@ -8,11 +8,11 @@ namespace Common.Model
     using ProtoBuf;
 
     [ProtoContract]
-    public class MsgSpec
+    public class WsRequestMessage
     {
-        [ProtoMember(1)] public string Operation;
+        [ProtoMember(1)] public int PartitionKey;
 
-        [ProtoMember(2)] public long Key;
+        [ProtoMember(2)] public string Operation;
 
         [ProtoMember(3)] public byte[] Value;
     }

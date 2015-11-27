@@ -11,7 +11,7 @@ namespace PublicGateway
     using System.Threading.Tasks;
     using Common.Logging;
     using Common.Shared;
-    using global::PublicGateway.Controllers;
+    using Common.Shared.Websockets;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
@@ -30,14 +30,8 @@ namespace PublicGateway
                     initParams => new OwinCommunicationListener("", new Startup(), initParams),
                     ServiceConst.ListenerOwin),
                 new ServiceInstanceListener(
-                    initParams =>
-                        new WebSocketListener(
-                            null,
-                            "PublicGatewayWS",
-                            ServiceConst.DataApiWebsockets,
-                            initParams,
-                            ReserveStockWebSocketController.ProcessOperation),
-                    ServiceConst.ListenerWebsockets)
+                    initParams => new WebSocketListener(null, "PublicGatewayWS", initParams, () => new PublicGatewayWebSocketConnectionHandler()),
+                    ServiceConst.ListenerWebsocket)
             };
         }
 

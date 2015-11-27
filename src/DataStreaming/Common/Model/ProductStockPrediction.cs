@@ -21,6 +21,7 @@ namespace Common.Model
 
         [DataMember]
         public float Probability { get; set; }
+
         [DataMember]
         public bool Reorder;
     }

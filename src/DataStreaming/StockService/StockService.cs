@@ -14,6 +14,8 @@ namespace StockService
     using Common.Logging;
     using Common.Model;
     using Common.Shared;
+    using Common.Shared.Serializers;
+    using Common.Shared.Websockets;
     using global::StockService.Interfaces;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
@@ -22,7 +24,7 @@ namespace StockService
     using Microsoft.ServiceFabric.Services.Runtime;
     using StockTrendPredictionActor.Interfaces;
 
-    public class StockService : StatefulService, IStockService
+    public class StockService : StatefulService, IStockService, IWebSocketConnectionHandler
     {
         private const string ProductsCollectionName = "products";
         private const string OrdersCollectionName = "orders";
@@ -134,8 +136,13 @@ namespace StockService
             return new[]
             {
                 new ServiceReplicaListener(
-                    initParams =>
-                        new ServiceRemotingListener<StockService>(initParams, this))
+                    initParams => new ServiceRemotingListener<StockService>(initParams, this),
+                    ServiceConst.ListenerRemoting
+                    ),
+                new ServiceReplicaListener(
+                    initParams => new WebSocketListener("WsServiceEndpoint", "StockServiceWS", initParams, () => this),
+                    ServiceConst.ListenerWebsocket
+                    )
             };
         }
 
@@ -248,6 +255,36 @@ namespace StockService
                     // do not throw out the exception, just keep iterating
                 }
             }
+        }
+
+        /// <summary>
+        /// IWebSocketListener.ProcessWsMessageAsync
+        /// </summary>
+        public async Task<byte[]> ProcessWsMessageAsync(byte[] wsrequest, CancellationToken cancellationToken)
+        {
+            Logger.Debug(nameof(this.ProcessWsMessageAsync));
+
+            ProtobufWsSerializer mserializer = new ProtobufWsSerializer();
+
+            WsRequestMessage mrequest = await mserializer.DeserializeAsync<WsRequestMessage>(wsrequest);
+
+            switch (mrequest.Operation)
+            {
+                case WSOperations.AddItem:
+                    {
+                        IWsSerializer pserializer = SerializerFactory.CreateSerializer();
+                        PostProductModel payload = await pserializer.DeserializeAsync<PostProductModel>(mrequest.Value);
+                        await this.PurchaseProduct(payload.ProductId, payload.Quantity);
+                    }
+                    break;
+            }
+
+            WsResponseMessage mresponse = new WsResponseMessage
+            {
+                Result = WsResult.Success
+            };
+
+            return await mserializer.SerializeAsync(mresponse);
         }
     }
 }

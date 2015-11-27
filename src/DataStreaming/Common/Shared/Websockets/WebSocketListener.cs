@@ -3,7 +3,7 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace PublicGateway
+namespace Common.Shared.Websockets
 {
     using System;
     using System.Fabric;
@@ -18,41 +18,37 @@ namespace PublicGateway
     using Common.Logging;
     using Common.Model;
     using Common.Shared.Serializers;
-    using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
 
     public class WebSocketListener : ICommunicationListener
     {
-        private const int MaxBufferSize = 102400;
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WebSocketListener));
-        public readonly string __webSocketRoot;
 
-        private readonly string _appRoot;
-        private readonly IReliableStateManager _stateManager;
+        private const int MaxBufferSize = 102400;
 
-        private readonly ServiceInitializationParameters _serviceInitializationParameters;
+        private readonly string appRoot;
 
-        private Task _mainLoop;
-        private string _listeningAddress;
-        private string _publishAddress;
+        private readonly ServiceInitializationParameters serviceInitializationParameters;
+
+        private readonly Func<IWebSocketConnectionHandler> createConnectionHandler;
+        private readonly string serviceEndpoint;
+        private string listeningAddress;
+        private Task mainLoop;
+        private string publishAddress;
         // Web Socket listener
-        private WebSocketApp _webSocketApp;
-
-        private Func<IReliableStateManager, MsgSpec, CancellationToken, Task<MsgSpec>> _appAction;
+        private WebSocketApp webSocketApp;
 
         public WebSocketListener(
-            IReliableStateManager stateManager,
+            string serviceEndpoint,
             string appRoot,
-            string webSocketRoot,
             ServiceInitializationParameters serviceInitializationParameters,
-            Func<IReliableStateManager, MsgSpec, CancellationToken, Task<MsgSpec>> appAction
+            Func<IWebSocketConnectionHandler> createConnectionHandler
             )
         {
-            this._stateManager = stateManager;
-            this._appRoot = appRoot;
-            this.__webSocketRoot = webSocketRoot;
-            this._appAction = appAction;
-            this._serviceInitializationParameters = serviceInitializationParameters;
+            this.serviceEndpoint = serviceEndpoint ?? "ServiceEndpoint";
+            this.appRoot = appRoot;
+            this.createConnectionHandler = createConnectionHandler;
+            this.serviceInitializationParameters = serviceInitializationParameters;
         }
 
         public async Task<string> OpenAsync(CancellationToken cancellationToken)
@@ -61,29 +57,36 @@ namespace PublicGateway
 
             try
             {
-                EndpointResourceDescription serviceEndpoint = this._serviceInitializationParameters.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
-                int port = serviceEndpoint.Port;
+                EndpointResourceDescription endpoint = this.serviceInitializationParameters
+                    .CodePackageActivationContext.GetEndpoint(this.serviceEndpoint);
+                int port = endpoint.Port;
 
-                this._listeningAddress = string.Format(
+                this.listeningAddress = string.Format(
                     CultureInfo.InvariantCulture,
                     "http://+:{0}/{1}",
                     port,
-                    string.IsNullOrWhiteSpace(this._appRoot)
+                    string.IsNullOrWhiteSpace(this.appRoot)
                         ? string.Empty
-                        : this._appRoot.TrimEnd('/') + '/');
+                        : this.appRoot.TrimEnd('/') + '/');
 
-                this._publishAddress = this._listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
+                if (this.serviceInitializationParameters is StatefulServiceInitializationParameters)
+                {
+                    StatefulServiceInitializationParameters sip = (StatefulServiceInitializationParameters) this.serviceInitializationParameters;
+                    this.listeningAddress += sip.PartitionId + "/" + sip.ReplicaId + "/";
+                }
 
-                // Publish "ws" address!
-                this._publishAddress = this._publishAddress.Replace("http", "ws");
+                this.publishAddress = this.listeningAddress.Replace("+", FabricRuntime.GetNodeContext().IPAddressOrFQDN);
 
-                Logger.Info("Starting websocket listener on {0}", this._listeningAddress);
-                this._webSocketApp = new WebSocketApp(this._listeningAddress);
-                this._webSocketApp.Init();
+                this.publishAddress = this.publishAddress.Replace("http", "ws");
 
-                this._mainLoop = this._webSocketApp.StartAsync(this.ProcessConnectionAsync);
+                Logger.Info("Starting websocket listener on {0}", this.listeningAddress);
+                this.webSocketApp = new WebSocketApp(this.listeningAddress);
+                this.webSocketApp.Init();
 
-                return await Task.FromResult(this._publishAddress);
+                this.mainLoop = this.webSocketApp.StartAsync(this.ProcessConnectionAsync);
+                Logger.Info("Started websocket listener on {0}", this.listeningAddress);
+
+                return await Task.FromResult(this.publishAddress);
             }
             catch (Exception ex)
             {
@@ -104,7 +107,7 @@ namespace PublicGateway
         }
 
         /// <summary>
-        /// Stops, cancels, and disposes everything.
+        ///     Stops, cancels, and disposes everything.
         /// </summary>
         private void StopAll()
         {
@@ -112,25 +115,27 @@ namespace PublicGateway
 
             try
             {
-                this._webSocketApp.Dispose();
-                if (this._mainLoop != null)
+                this.webSocketApp.Dispose();
+                if (this.mainLoop != null)
                 {
                     // allow a few seconds to complete the main loop
-                    if (!this._mainLoop.Wait(TimeSpan.FromSeconds(3)))
+                    if (!this.mainLoop.Wait(TimeSpan.FromSeconds(3)))
                         Logger.Warning("MainLoop did not complete within allotted time");
 
-                    this._mainLoop.Dispose();
-                    this._mainLoop = null;
+                    this.mainLoop.Dispose();
+                    this.mainLoop = null;
                 }
 
-                this._listeningAddress = string.Empty;
+                this.listeningAddress = string.Empty;
             }
             catch (ObjectDisposedException)
             {
             }
         }
 
-        private async Task<bool> ProcessConnectionAsync(CancellationToken cancellationToken, HttpListenerContext httpContext)
+        private async Task<bool> ProcessConnectionAsync(
+            CancellationToken cancellationToken,
+            HttpListenerContext httpContext)
         {
             Logger.Debug("ProcessConnectionAsync");
 
@@ -153,8 +158,9 @@ namespace PublicGateway
             MemoryStream ms = new MemoryStream();
             try
             {
+                IWebSocketConnectionHandler handler = this.createConnectionHandler();
+
                 byte[] receiveBuffer = null;
-                int payloadbytes = 0;
 
                 // While the WebSocket connection remains open run a simple loop that receives data and sends it back.
                 while (webSocket.State == WebSocketState.Open)
@@ -174,47 +180,40 @@ namespace PublicGateway
 
                         if (receiveResult.EndOfMessage)
                         {
-                            await ms.WriteAsync(receiveBuffer, (int) ms.Position, receiveResult.Count, cancellationToken);
+                            await ms.WriteAsync(receiveBuffer, 0, receiveResult.Count, cancellationToken);
+                            receiveBuffer = ms.ToArray();
                             ms.Dispose();
                             ms = new MemoryStream();
-                            payloadbytes += receiveResult.Count;
                         }
                         else
                         {
-                            await ms.WriteAsync(receiveBuffer, (int) ms.Position, receiveResult.Count, cancellationToken);
-                            payloadbytes += receiveResult.Count;
+                            await ms.WriteAsync(receiveBuffer, 0, receiveResult.Count, cancellationToken);
                             continue;
                         }
 
-                        IWsSerializer mserializer = new ProtobufWsSerializer();
-                        MsgSpec mresp;
+                        byte[] wsresponse = null;
                         try
                         {
-                            // Derialize websocket request
-                            MsgSpec mreq = await mserializer.DeserializeAsync<MsgSpec>(receiveBuffer, 0, payloadbytes);
-
                             // dispatch to App provided function with requested payload
-                            mresp = await this._appAction(this._stateManager, mreq, cancellationToken);
+                            wsresponse = await handler.ProcessWsMessageAsync(receiveBuffer, cancellationToken);
                         }
                         catch (Exception ex)
                         {
                             // catch any error in the appAction and notify the client
-                            mresp = new MsgSpec()
-                            {
-                                Key = MsgSpecKeys.Error,
-                                Value = Encoding.UTF8.GetBytes(ex.Message)
-                            };
+                            wsresponse = await new ProtobufWsSerializer().SerializeAsync(
+                                new WsResponseMessage
+                                {
+                                    Result = WsResult.Error,
+                                    Value = Encoding.UTF8.GetBytes(ex.Message)
+                                });
                         }
 
-                        payloadbytes = 0;
-
                         // Send Result back to client
-                        await
-                            webSocket.SendAsync(
-                                new ArraySegment<byte>(await mserializer.SerializeAsync(mresp)),
-                                WebSocketMessageType.Binary,
-                                true,
-                                cancellationToken);
+                        await webSocket.SendAsync(
+                            new ArraySegment<byte>(wsresponse),
+                            WebSocketMessageType.Binary,
+                            true,
+                            cancellationToken);
                     }
                     catch (WebSocketException ex)
                     {
@@ -227,7 +226,7 @@ namespace PublicGateway
             catch (Exception ex)
             {
                 Logger.Error(ex, "ProcessConnectionAsync");
-                return false;
+                throw;
             }
         }
     }

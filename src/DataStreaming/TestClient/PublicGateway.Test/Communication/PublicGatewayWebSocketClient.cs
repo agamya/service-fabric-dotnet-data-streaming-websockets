@@ -84,7 +84,7 @@ namespace PublicGateway.Test
         /// <summary>
         /// Re-uses the open websocket connection (assumes one is already created/connected)
         /// </summary>
-        public async Task<MsgSpec> SendReceiveAsync(MsgSpec msgspec, CancellationToken cancellationToken)
+        public async Task<WsResponseMessage> SendReceiveAsync(WsRequestMessage msgspec, CancellationToken cancellationToken)
         {
             if (this.websocketManager == null)
                 throw new ApplicationException("SendReceiveAsync requires an open websocket client");
@@ -96,7 +96,7 @@ namespace PublicGateway.Test
 
             byte[] response = await this.websocketManager.SendReceiveAsync(request);
 
-            return await mserializer.DeserializeAsync<MsgSpec>(response);
+            return await mserializer.DeserializeAsync<WsResponseMessage>(response);
         }
     }
 }

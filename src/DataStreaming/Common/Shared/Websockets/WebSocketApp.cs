@@ -3,7 +3,7 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace PublicGateway
+namespace Common.Shared.Websockets
 {
     using System;
     using System.Net;
@@ -15,17 +15,19 @@ namespace PublicGateway
     public class WebSocketApp : IDisposable
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WebSocketApp));
-        private static byte[] _uncaughtHttpBytes = Encoding.Default.GetBytes("Uncaught error in main processing loop!");
 
-        private string _address;
-        private CancellationTokenSource _cancellationTokenSource;
-        private CancellationToken _cancellationToken;
-        private HttpListener _httpListener;
+        private static readonly byte[] UncaughtHttpBytes =
+            Encoding.Default.GetBytes("Uncaught error in main processing loop!");
+
+        private string address;
+        private CancellationToken cancellationToken;
+        private CancellationTokenSource cancellationTokenSource;
+        private HttpListener httpListener;
 
         public WebSocketApp(string address)
         {
-            this._address = address;
-            this._cancellationTokenSource = new CancellationTokenSource();
+            this.address = address;
+            this.cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Dispose()
@@ -34,17 +36,17 @@ namespace PublicGateway
 
             try
             {
-                if (this._cancellationTokenSource != null && !this._cancellationTokenSource.IsCancellationRequested)
-                    this._cancellationTokenSource.Cancel();
+                if (this.cancellationTokenSource != null && !this.cancellationTokenSource.IsCancellationRequested)
+                    this.cancellationTokenSource.Cancel();
 
-                if (this._httpListener != null && this._httpListener.IsListening)
+                if (this.httpListener != null && this.httpListener.IsListening)
                 {
-                    this._httpListener.Stop();
-                    this._httpListener.Close();
+                    this.httpListener.Stop();
+                    this.httpListener.Close();
                 }
 
-                if (this._cancellationTokenSource != null && !this._cancellationTokenSource.IsCancellationRequested)
-                    this._cancellationTokenSource.Dispose();
+                if (this.cancellationTokenSource != null && !this.cancellationTokenSource.IsCancellationRequested)
+                    this.cancellationTokenSource.Dispose();
             }
             catch (ObjectDisposedException)
             {
@@ -62,41 +64,39 @@ namespace PublicGateway
 
         public void Init()
         {
-            if (!this._address.EndsWith("/"))
-            {
-                this._address += "/";
-            }
+            if (!this.address.EndsWith("/"))
+                this.address += "/";
 
-            this._httpListener = new HttpListener();
-            this._httpListener.Prefixes.Add(this._address);
-            this._cancellationTokenSource = new CancellationTokenSource();
-            this._cancellationToken = this._cancellationTokenSource.Token;
-            this._httpListener.Start();
+            this.httpListener = new HttpListener();
+            this.httpListener.Prefixes.Add(this.address);
+            this.cancellationTokenSource = new CancellationTokenSource();
+            this.cancellationToken = this.cancellationTokenSource.Token;
+            this.httpListener.Start();
         }
 
         public async Task StartAsync(
             Func<CancellationToken, HttpListenerContext, Task<bool>> processActionAsync
             )
         {
-            while (this._httpListener.IsListening)
+            while (this.httpListener.IsListening)
             {
                 HttpListenerContext context = null;
                 try
                 {
-                    context = await this._httpListener.GetContextAsync();
+                    context = await this.httpListener.GetContextAsync();
                     Logger.Debug("GetContextAsync complete");
                 }
                 catch (Exception ex)
                 {
                     // check if the exception is caused due to cancellation
-                    if (this._cancellationToken.IsCancellationRequested)
+                    if (this.cancellationToken.IsCancellationRequested)
                         return;
 
                     Logger.Error(ex, "Error in GetContextAsync");
                     continue;
                 }
 
-                if (this._cancellationToken.IsCancellationRequested)
+                if (this.cancellationToken.IsCancellationRequested)
                     return;
 
                 // a new connection is established, dispatch to the callback function
@@ -111,7 +111,7 @@ namespace PublicGateway
             )
         {
             // do not await on processAction since we don't want to block on waiting for more connections
-            processActionAsync(this._cancellationToken, context)
+            processActionAsync(this.cancellationToken, context)
                 .ContinueWith(
                     t =>
                     {
@@ -120,9 +120,9 @@ namespace PublicGateway
                             Logger.Error(t.Exception, "processAction did not handle their exceptions");
                             try
                             {
-                                context.Response.ContentLength64 = _uncaughtHttpBytes.Length;
+                                context.Response.ContentLength64 = UncaughtHttpBytes.Length;
                                 context.Response.StatusCode = 500;
-                                context.Response.OutputStream.Write(_uncaughtHttpBytes, 0, _uncaughtHttpBytes.Length);
+                                context.Response.OutputStream.Write(UncaughtHttpBytes, 0, UncaughtHttpBytes.Length);
                                 context.Response.OutputStream.Close();
                             }
                             catch (Exception ex)
@@ -131,7 +131,7 @@ namespace PublicGateway
                             }
                         }
                     },
-                    this._cancellationToken);
+                    this.cancellationToken);
         }
     }
 }
