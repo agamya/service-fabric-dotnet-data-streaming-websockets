@@ -2,7 +2,7 @@
 
 This repository contains a sample project for Azure Service Fabric, the next-generation platform as a service offering from Microsoft. 
 
-# Overview  #
+## Overview
 This document walks you through how to deploy a the Predict Backend application, which demonstrates how to integrate the real time flow of orders from an e-commerce site and leverage Service Fabric to provide Stock Trend predictions.  The following key concepts are demonstrated in this sample: 
 
 - Event streams: ingestion of data streams with ingress point exposed through Web Sockets.
@@ -11,7 +11,7 @@ This document walks you through how to deploy a the Predict Backend application,
 
 
 
-# Pre-Requisites  #
+## Pre-Requisites
 Visual Studio 2015
 
 Before starting, make sure you have the Service Fabric development environment setup on your machine. Detailed instructions on how to setup the development environment can be found here https://azure.microsoft.com/en-gb/documentation/articles/service-fabric-get-started/ 
@@ -20,7 +20,7 @@ This solution is built against Service Fabric 4.4.87.9494 (install using web pla
 Note - For full end to end run you will need to set up the Azure ML dependency, but the sample runs with “random” data generated to improve the F5 experience.  Please see “Setting up the Azure ML Dependency” if you want to deploy the full version including the back end Azure ML Service. 
 
 
-# Download and building the source #
+## Download and building the source
 Download the source and verify that you can build it in your local development environment by right clicking the DataStreaming solution and selecting Rebuild Solution. The solution uses the NuGet package manager to download and install its dependencies automatically.
 
 Deploying the Solution to a Service Fabric Cluster 
@@ -31,7 +31,7 @@ Deploying the Solution to a Service Fabric Cluster
 
  
 
-# Run The Test Client  #
+## Run The Test Client
 Open DataStreaming\Tests\PublicGateway.Test\bin\x64\Debug and run PublicGateway.Test.exe.  If you run it with no command line argument parameters in a command prompt window it provides instructions on how to run it in one of 3 modes 
 
 Purchase: place orders over the Web API Controller 
@@ -40,13 +40,13 @@ Reorder: reorder specified stock
 
 Stream: Uses web sockets to place orders
 
-# Run The Web Page #
+## Run The Web Page
 Once the solution is deployed we provide two views implemented using Angular and hosted in the PublicGateway stateless service  
 - Products in stock - Real time updates http://localhost:3251/
-- Aggregated view of stock trend predictions http://localhost:3251/stockaggregator note there is a link to this from the main page 
+- Aggregated view of stock trend predictions http://localhost:3251/StockAggregator.html note there is a link to this from the main page 
 
 
-# Setting Up Azure ML  #
+## Setting Up Azure ML
 The default implementation of the AzureML client is a mocked out implementation that generates a random value.  This setting is determined by the file:
 src\DataStreaming\StockTrendPredictionActor\PackageRoot\Config\Settings.xml
 
@@ -56,7 +56,7 @@ AzureMlKey
  
 This section will talk you through how to set up the fully functioning Azure ML model that this sample can integrate with 
 
-## Azure Machine Learning – Stock Re-order Prediction ##
+### Azure Machine Learning – Stock Re-order Prediction
 Azure Machine Learning is a useful tool to make predictions from your data.  It provides a managed cloud based solution for predictive analytics solutions that is both easy to use and incredibly powerful.  We have provided a sample experiment to use as part of this E-Commerce example that will make predictions on whether stock should be re-ordered based on historical consumption rates and stock levels amongst other features.  To set this up perform the following steps 
 
 1. In a browser navigate to ⦁	http://manage.windowsazure.com
