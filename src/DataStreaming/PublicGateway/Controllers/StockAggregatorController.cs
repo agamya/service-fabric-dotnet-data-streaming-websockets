@@ -17,13 +17,7 @@ namespace PublicGateway.Controllers
     public class StockAggregatorController : ApiController
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockAggregatorController));
-
-        [HttpGet]
-        public HttpResponseMessage Index()
-        {
-            return this.View("PublicGateway.wwwroot.StockAggregatorView.html", "text/html");
-        }
-
+        
         [HttpPost]
         public async Task<IEnumerable<ProductStockPrediction>> GetProducts()
         {

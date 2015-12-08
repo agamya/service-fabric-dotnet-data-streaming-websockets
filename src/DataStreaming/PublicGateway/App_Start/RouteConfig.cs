@@ -37,20 +37,6 @@ namespace PublicGateway
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new {id = RouteParameter.Optional}
                 );
-
-            config.Routes.MapHttpRoute(
-                name: "Default",
-                routeTemplate: "{action}",
-                defaults: new {controller = "Default", action = "Index"},
-                constraints: new {}
-                );
-
-            config.Routes.MapHttpRoute(
-                name: "Files",
-                routeTemplate: "Files/{name}",
-                defaults: new {controller = "File", action = "Get"},
-                constraints: new {}
-                );
         }
     }
 }

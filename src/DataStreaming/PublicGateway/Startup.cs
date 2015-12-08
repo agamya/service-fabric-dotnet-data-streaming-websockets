@@ -7,7 +7,10 @@ namespace PublicGateway
 {
     using System.Web.Http;
     using Microsoft.AspNet.SignalR;
+    using Microsoft.Owin;
     using Microsoft.Owin.Cors;
+    using Microsoft.Owin.FileSystems;
+    using Microsoft.Owin.StaticFiles;
     using Owin;
 
     public class Startup : IOwinAppBuilder
@@ -16,10 +19,21 @@ namespace PublicGateway
         {
             HttpConfiguration config = new HttpConfiguration();
 
+            PhysicalFileSystem physicalFileSystem = new PhysicalFileSystem(@".\wwwroot");
+            FileServerOptions fileOptions = new FileServerOptions();
+
+            fileOptions.EnableDefaultFiles = true;
+            fileOptions.RequestPath = PathString.Empty;
+            fileOptions.FileSystem = physicalFileSystem;
+            fileOptions.DefaultFilesOptions.DefaultFileNames = new[] { "Default.html" };
+            fileOptions.StaticFileOptions.FileSystem = fileOptions.FileSystem = physicalFileSystem;
+            fileOptions.StaticFileOptions.ServeUnknownFileTypes = true;
+
             FormatterConfig.ConfigureFormatters(config.Formatters);
             RouteConfig.RegisterRoutes(config);
 
             appBuilder.UseWebApi(config);
+            appBuilder.UseFileServer(fileOptions);
 
             //CORS & SignalR
             appBuilder.UseCors(CorsOptions.AllowAll);
