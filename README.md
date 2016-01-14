@@ -1,3 +1,9 @@
+---
+services: service-fabric
+platforms: dotnet
+author: stascode
+---
+
 # Service Fabric Predictive Backend Sample  #
 
 This repository contains a sample project for Azure Service Fabric, the next-generation platform as a service offering from Microsoft. 
