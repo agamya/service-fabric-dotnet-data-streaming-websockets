@@ -10,7 +10,7 @@ namespace StockTrendPredictionActor
     using System.Fabric;
     using System.Threading.Tasks;
     using Microsoft.ServiceFabric.Actors;
-
+    using Microsoft.ServiceFabric.Actors.Runtime;
     [EventSource(Name = "MyCompany-PredictiveBackend-StockTrendPredictionActor")]
     internal sealed class ActorEventSource : EventSource
     {
@@ -70,9 +70,8 @@ namespace StockTrendPredictionActor
                 this.WriteEvent(MessageEventId, message);
             }
         }
-
         [NonEvent]
-        public void ActorMessage(StatelessActor actor, string message, params object[] args)
+        public void ActorMessage(ActorBase actor, string message, params object[] args)
         {
             if (this.IsEnabled())
             {
@@ -80,32 +79,12 @@ namespace StockTrendPredictionActor
                 this.ActorMessage(
                     actor.GetType().ToString(),
                     actor.Id.ToString(),
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                    actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
-                    actor.ActorService.ServiceInitializationParameters.ServiceName.ToString(),
-                    actor.ActorService.ServiceInitializationParameters.PartitionId,
-                    actor.ActorService.ServiceInitializationParameters.InstanceId,
-                    FabricRuntime.GetNodeContext().NodeName,
-                    finalMessage);
-            }
-        }
-
-        [NonEvent]
-        public void ActorMessage(StatefulActorBase actor, string message, params object[] args)
-        {
-            if (this.IsEnabled())
-            {
-                string finalMessage = string.Format(message, args);
-                this.ActorMessage(
-                    actor.GetType().ToString(),
-                    actor.Id.ToString(),
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationTypeName,
-                    actor.ActorService.ServiceInitializationParameters.CodePackageActivationContext.ApplicationName,
-                    actor.ActorService.ServiceInitializationParameters.ServiceTypeName,
-                    actor.ActorService.ServiceInitializationParameters.ServiceName.ToString(),
-                    actor.ActorService.ServiceInitializationParameters.PartitionId,
-                    actor.ActorService.ServiceInitializationParameters.ReplicaId,
+                    actor.ActorService.Context.CodePackageActivationContext.ApplicationTypeName,
+                    actor.ActorService.Context.CodePackageActivationContext.ApplicationName,
+                    actor.ActorService.Context.ServiceTypeName,
+                    actor.ActorService.Context.ServiceName.ToString(),
+                    actor.ActorService.Context.PartitionId,
+                    actor.ActorService.Context.ReplicaId,
                     FabricRuntime.GetNodeContext().NodeName,
                     finalMessage);
             }

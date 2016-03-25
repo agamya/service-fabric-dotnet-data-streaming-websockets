@@ -7,6 +7,7 @@ namespace StockAggregatorService
 {
     using System;
     using System.Collections.Generic;
+    using System.Fabric;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -21,21 +22,33 @@ namespace StockAggregatorService
     using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
     using StockTrendPredictionActor.Interfaces;
+    using Microsoft.ServiceFabric.Actors.Client;
 
     public class StockAggregatorService : StatefulService, IStockAggregatorService
     {
         private const string ProductsCollectionName = "aggregatedproducts";
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockAggregatorService));
 
+        public StockAggregatorService(StatefulServiceContext context)
+            : base (context)
+        {
+
+        }
+
         public async Task<IEnumerable<ProductStockPrediction>> GetAllProducts()
         {
             Logger.Debug(nameof(this.GetAllProducts));
+
             IReliableDictionary<int, ProductStockPrediction> productsCollection =
                 await this.StateManager.GetOrAddAsync<IReliableDictionary<int, ProductStockPrediction>>(ProductsCollectionName);
 
-            return productsCollection
-                .OrderByDescending(p => p.Value.Probability)
-                .Select(p => p.Value);
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+
+                return (await productsCollection.CreateEnumerableAsync(tx)).ToEnumerable()
+                    .OrderByDescending(p => p.Value.Probability)
+                    .Select(p => p.Value);
+            }
         }
 
         public async Task<IEnumerable<ProductStockPrediction>> GetProducts(float probability)
@@ -47,7 +60,7 @@ namespace StockAggregatorService
 
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                return productsCollection
+                return (await productsCollection.CreateEnumerableAsync(tx)).ToEnumerable()
                     .Where(p => p.Value.Probability >= probability)
                     .OrderByDescending(p => p.Value.Probability)
                     .Select(p => p.Value);
@@ -60,7 +73,7 @@ namespace StockAggregatorService
             {
                 new ServiceReplicaListener(
                     initParams =>
-                        new ServiceRemotingListener<StockAggregatorService>(initParams, this))
+                        this.CreateServiceRemotingListener<StockAggregatorService>(initParams))
             };
         }
 

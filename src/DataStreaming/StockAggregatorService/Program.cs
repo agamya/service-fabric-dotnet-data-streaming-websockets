@@ -10,7 +10,7 @@ namespace StockAggregatorService
     using System.Fabric;
     using System.Threading;
     using Common.Shared.Logging;
-
+    using Microsoft.ServiceFabric.Services.Runtime;
     public class Program
     {
         public static void Main(string[] args)
@@ -20,17 +20,13 @@ namespace StockAggregatorService
                 // Initializing ILogger
                 LoggingSource.Initialize(ServiceEventSource.Current.Message);
 
-                using (FabricRuntime fabricRuntime = FabricRuntime.Create())
-                {
-                    // This is the name of the ServiceType that is registered with FabricRuntime. 
-                    // This name must match the name defined in the ServiceManifest. If you change
-                    // this name, please change the name of the ServiceType in the ServiceManifest.
-                    fabricRuntime.RegisterServiceType("StockAggregatorServiceType", typeof(StockAggregatorService));
+                ServiceRuntime.RegisterServiceAsync("StockAggregatorServiceType", context =>
+                    new StockAggregatorService(context)).GetAwaiter().GetResult();
 
-                    ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(StockAggregatorService).Name);
+                ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(StockAggregatorService).Name);
 
-                    Thread.Sleep(Timeout.Infinite);
-                }
+                Thread.Sleep(Timeout.Infinite);
+
             }
             catch (Exception e)
             {

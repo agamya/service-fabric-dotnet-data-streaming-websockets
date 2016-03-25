@@ -7,6 +7,7 @@ namespace PublicGateway
 {
     using System;
     using System.Collections.Generic;
+    using System.Fabric;
     using System.Threading;
     using System.Threading.Tasks;
     using Common.Logging;
@@ -16,10 +17,16 @@ namespace PublicGateway
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
     using StockTrendPredictionActor.Interfaces;
+    using Microsoft.ServiceFabric.Actors.Client;
 
     public class PublicGateway : StatelessService
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(PublicGateway));
+
+        public PublicGateway(StatelessServiceContext context)
+            : base (context)
+        {
+        }
 
         protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {

@@ -21,15 +21,15 @@ namespace PublicGateway
 
         private readonly string appRoot;
         private readonly IOwinAppBuilder startup;
-        private readonly StatelessServiceInitializationParameters serviceInitializationParameters;
+        private readonly StatelessServiceContext serviceContext;
         private string listeningAddress;
         private IDisposable serverHandle;
 
-        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, StatelessServiceInitializationParameters serviceInitializationParameters)
+        public OwinCommunicationListener(string appRoot, IOwinAppBuilder startup, StatelessServiceContext serviceContext)
         {
             this.appRoot = appRoot;
             this.startup = startup;
-            this.serviceInitializationParameters = serviceInitializationParameters;
+            this.serviceContext = serviceContext;
         }
 
         public Task<string> OpenAsync(CancellationToken cancellationToken)
@@ -38,7 +38,7 @@ namespace PublicGateway
 
             try
             {
-                EndpointResourceDescription serviceEndpoint = this.serviceInitializationParameters.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
+                EndpointResourceDescription serviceEndpoint = this.serviceContext.CodePackageActivationContext.GetEndpoint("ServiceEndpoint");
                 int port = serviceEndpoint.Port;
 
                 this.listeningAddress = String.Format(

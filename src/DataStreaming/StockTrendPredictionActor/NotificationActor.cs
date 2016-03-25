@@ -11,8 +11,10 @@ namespace StockTrendPredictionActor
     using Common.Model;
     using global::StockTrendPredictionActor.Interfaces;
     using Microsoft.ServiceFabric.Actors;
+    using Microsoft.ServiceFabric.Actors.Runtime;
 
-    public class NotificationActor : StatelessActor, INotificationActor
+    [StatePersistence(StatePersistence.None)]
+    public class NotificationActor : Actor, INotificationActor
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(NotificationActor));
 

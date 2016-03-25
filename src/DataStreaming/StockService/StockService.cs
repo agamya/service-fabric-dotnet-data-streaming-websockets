@@ -35,13 +35,17 @@ namespace StockService
         private IReliableDictionary<int, Product> productsCollection = null;
         private IReliableDictionary<string, ProductPurchase> purchaseLog = null;
 
+        public StockService(StatefulServiceContext context)
+            : base(context)
+        { }
+
         public async Task<Product> GetProduct(int productId)
         {
             Logger.Debug("GetProduct: #{0}", productId);
 
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                ConditionalResult<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId);
+                ConditionalValue<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId);
                 return item.HasValue ? item.Value : null;
             }
         }
@@ -54,7 +58,7 @@ namespace StockService
             {
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
-                    ConditionalResult<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId, LockMode.Update);
+                    ConditionalValue<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId, LockMode.Update);
 
                     Product product = item.HasValue ? item.Value : null;
 
@@ -114,7 +118,7 @@ namespace StockService
 
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                ConditionalResult<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId);
+                ConditionalValue<Product> item = await this.productsCollection.TryGetValueAsync(tx, productId);
                 Product product = item.HasValue ? item.Value : null;
 
                 if (product == null)
@@ -136,11 +140,11 @@ namespace StockService
             return new[]
             {
                 new ServiceReplicaListener(
-                    initParams => new ServiceRemotingListener<StockService>(initParams, this),
+                    context => this.CreateServiceRemotingListener<StockService>(context),
                     ServiceConst.ListenerRemoting
                     ),
                 new ServiceReplicaListener(
-                    initParams => new WebSocketListener("WsServiceEndpoint", "StockServiceWS", initParams, () => this),
+                    context => new WebSocketListener("WsServiceEndpoint", "StockServiceWS", context, () => this),
                     ServiceConst.ListenerWebsocket
                     )
             };
@@ -152,12 +156,12 @@ namespace StockService
 
             try
             {
-                if (this.ServicePartition.PartitionInfo.Kind != ServicePartitionKind.Int64Range)
+                if (this.Partition.PartitionInfo.Kind != ServicePartitionKind.Int64Range)
                     throw new ApplicationException("Partition kind is not Int64Range");
 
-                Int64RangePartitionInformation partitionInfo = (Int64RangePartitionInformation) this.ServicePartition.PartitionInfo;
-                int lowId = (int) partitionInfo.LowKey;
-                int highId = (int) partitionInfo.HighKey;
+                Int64RangePartitionInformation partitionInfo = (Int64RangePartitionInformation)this.Partition.PartitionInfo;
+                int lowId = (int)partitionInfo.LowKey;
+                int highId = (int)partitionInfo.HighKey;
 
                 //bulk-import test data from CSV files
                 Logger.Debug("attempting to bulk-import data");
@@ -173,16 +177,18 @@ namespace StockService
                     this.processOrdersInterval = TimeSpan.FromSeconds(3);
 
                 //check if data has been imported
-                if (await this.productsCollection.GetCountAsync() <= 0)
+                using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
-                    using (ITransaction tx = this.StateManager.CreateTransaction())
+                    if (await this.productsCollection.GetCountAsync(tx) <= 0)
                     {
                         Logger.Debug("Importing products with productId from {0} to {1}...", lowId, highId);
 
                         //bulk-import the data
                         BulkDataSource dataSource = new BulkDataSource();
                         foreach (Product p in dataSource.ReadProducts(lowId, highId))
+                        {
                             await this.productsCollection.AddAsync(tx, p.ProductId, p);
+                        }
 
                         await tx.CommitAsync();
                     }
@@ -204,7 +210,7 @@ namespace StockService
         /// </summary>
         private async Task DispatchPurchaseLogAsync(CancellationToken cancellationToken)
         {
-            string actorId = this.ServicePartition.PartitionInfo.Id.ToString();
+            string actorId = this.Partition.PartitionInfo.Id.ToString();
 
             while (true)
             {
@@ -214,37 +220,49 @@ namespace StockService
 
                 try
                 {
-                    if (await this.purchaseLog.GetCountAsync() <= 0)
-                        continue;
-
-                    // in real world you should use .Take() to selecte only limited number of orders
-                    // and those in batches
-                    List<ProductPurchase> orders = this.purchaseLog.CreateEnumerable()
-                        .Select(x => x.Value)
-                        .ToList();
-
-                    Logger.Debug("DispatchPurchaseLogAsync: {0} orders to process", orders.Count);
-
-                    IStockTrendPredictionActor predictionActor = ConnectionFactory.CreateBatchedStockTrendPredictionActor(actorId);
-
-                    try
-                    {
-                        // In real world, you should add retry logic in case actor is temporarily not available
-                        await predictionActor.ProcessPurchasesAsync(orders);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex, "PredictionActor error");
-                    }
-
-                    // Clear up processed orders even if the actor is not availbale. 
-                    // In real life you need to bound the orders log 
-                    // even if the actor is not available 
-                    // to avoid eating up memory and disk resources
                     using (ITransaction tx = this.StateManager.CreateTransaction())
                     {
+                        long purchaseCount = await this.purchaseLog.GetCountAsync(tx);
+                        if (purchaseCount <= 0)
+                        {
+                            continue;
+                        }
+
+                        // in real world you should use .Take() to selecte only limited number of orders
+                        // and those in batches
+                        List<ProductPurchase> orders = new List<ProductPurchase>((int)purchaseCount);
+
+                        IAsyncEnumerable<KeyValuePair<string, ProductPurchase>> enumerable = await this.purchaseLog.CreateEnumerableAsync(tx);
+
+                        await (enumerable.ForeachAsync(cancellationToken, item =>
+                        {
+                            orders.Add(item.Value);
+                        }));
+
+
+                        Logger.Debug("DispatchPurchaseLogAsync: {0} orders to process", orders.Count);
+
+                        IStockTrendPredictionActor predictionActor = ConnectionFactory.CreateBatchedStockTrendPredictionActor(actorId);
+
+                        try
+                        {
+                            // In real world, you should add retry logic in case actor is temporarily not available
+                            await predictionActor.ProcessPurchasesAsync(orders);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Error(ex, "PredictionActor error");
+                        }
+
+                        // Clear up processed orders even if the actor is not availbale. 
+                        // In real life you need to bound the orders log 
+                        // even if the actor is not available 
+                        // to avoid eating up memory and disk resources
+
                         foreach (ProductPurchase order in orders)
+                        {
                             await this.purchaseLog.TryRemoveAsync(tx, order.PurchaseKey);
+                        }
 
                         await tx.CommitAsync();
                     }

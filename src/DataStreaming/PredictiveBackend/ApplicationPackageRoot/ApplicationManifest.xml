@@ -15,6 +15,8 @@
       <Parameter Name="StockService_HighKey" DefaultValue="1000" />
       <Parameter Name="PublicGateway_InstanceCount" DefaultValue="-1" />
       <Parameter Name="Logger" DefaultValue="TraceLogger" />
+      <Parameter Name="NotificationActorService_MinReplicaSetSize" DefaultValue="1" />
+      <Parameter Name="NotificationActorService_TargetReplicaSetSize" DefaultValue="1" />
    </Parameters>
    <ServiceManifestImport>
       <ServiceManifestRef ServiceManifestName="StockTrendPredictionActorPkg" ServiceManifestVersion="1.0.0" />
@@ -65,12 +67,12 @@
       </ConfigOverrides>
    </ServiceManifestImport>
    <DefaultServices>
-      <Service Name="NotificationActorService" GeneratedIdRef="4f99aaa0-45fa-492f-b3ac-b3478ff3ae8a">
-         <StatelessService ServiceTypeName="NotificationActorServiceType">
+      <Service Name="NotificationActorService" GeneratedIdRef="521e3389-56bd-41f8-8e9a-d3d35cbfe285|None">
+         <StatefulService ServiceTypeName="NotificationActorServiceType" TargetReplicaSetSize="[NotificationActorService_TargetReplicaSetSize]" MinReplicaSetSize="[NotificationActorService_MinReplicaSetSize]">
             <UniformInt64Partition PartitionCount="[NotificationActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
-         </StatelessService>
+         </StatefulService>
       </Service>
-      <Service Name="StockTrendPredictionActorService" GeneratedIdRef="de0ea888-417e-4b06-8b21-1a1dbeb314cb">
+      <Service Name="StockTrendPredictionActorService" GeneratedIdRef="233c84f1-1370-4ce7-8fec-6f68074f19dc|Persisted">
          <StatefulService ServiceTypeName="StockTrendPredictionActorServiceType" TargetReplicaSetSize="[StockTrendPredictionActorService_TargetReplicaSetSize]" MinReplicaSetSize="[StockTrendPredictionActorService_MinReplicaSetSize]">
             <UniformInt64Partition PartitionCount="[StockTrendPredictionActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
          </StatefulService>

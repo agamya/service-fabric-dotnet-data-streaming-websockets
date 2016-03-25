@@ -2,13 +2,10 @@
 <Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/2011/01/fabric">
    <Section Name="StockTrendPredictionActorServiceReplicatorConfig">
       <Parameter Name="ReplicatorEndpoint" Value="StockTrendPredictionActorServiceReplicatorEndpoint" />
+      <Parameter Name="BatchAcknowledgementInterval" Value="0.005" />
    </Section>
    <Section Name="StockTrendPredictionActorServiceReplicatorSecurityConfig">
       <Parameter Name="CredentialType" Value="None" />
-   </Section>
-   <Section Name="StockTrendPredictionActorServiceLocalStoreConfig">
-      <Parameter Name="MaxAsyncCommitDelayInMilliseconds" Value="100" />
-      <Parameter Name="MaxVerPages" Value="32768" />
    </Section>
    <Section Name="AppSettings">
       <Parameter Name="PredictionTimerStartDelay" Value="00:00:01" />
@@ -22,5 +19,12 @@
    </Section>
    <Section Name="Logging">
       <Parameter Name="Logger" Value="TraceLogger" />
+   </Section>
+   <Section Name="NotificationActorServiceReplicatorConfig">
+      <Parameter Name="ReplicatorEndpoint" Value="NotificationActorServiceReplicatorEndpoint" />
+      <Parameter Name="BatchAcknowledgementInterval" Value="0.005" />
+   </Section>
+   <Section Name="NotificationActorServiceReplicatorSecurityConfig">
+      <Parameter Name="CredentialType" Value="None" />
    </Section>
 </Settings>

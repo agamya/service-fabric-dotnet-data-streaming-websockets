@@ -28,7 +28,7 @@ namespace Common.Shared.Websockets
 
         private readonly string appRoot;
 
-        private readonly ServiceInitializationParameters serviceInitializationParameters;
+        private readonly ServiceContext serviceContext;
 
         private readonly Func<IWebSocketConnectionHandler> createConnectionHandler;
         private readonly string serviceEndpoint;
@@ -41,14 +41,14 @@ namespace Common.Shared.Websockets
         public WebSocketListener(
             string serviceEndpoint,
             string appRoot,
-            ServiceInitializationParameters serviceInitializationParameters,
+            ServiceContext serviceContext,
             Func<IWebSocketConnectionHandler> createConnectionHandler
             )
         {
             this.serviceEndpoint = serviceEndpoint ?? "ServiceEndpoint";
             this.appRoot = appRoot;
             this.createConnectionHandler = createConnectionHandler;
-            this.serviceInitializationParameters = serviceInitializationParameters;
+            this.serviceContext = serviceContext;
         }
 
         public async Task<string> OpenAsync(CancellationToken cancellationToken)
@@ -57,7 +57,7 @@ namespace Common.Shared.Websockets
 
             try
             {
-                EndpointResourceDescription endpoint = this.serviceInitializationParameters
+                EndpointResourceDescription endpoint = this.serviceContext
                     .CodePackageActivationContext.GetEndpoint(this.serviceEndpoint);
                 int port = endpoint.Port;
 
@@ -69,9 +69,9 @@ namespace Common.Shared.Websockets
                         ? string.Empty
                         : this.appRoot.TrimEnd('/') + '/');
 
-                if (this.serviceInitializationParameters is StatefulServiceInitializationParameters)
+                if (this.serviceContext is StatefulServiceContext)
                 {
-                    StatefulServiceInitializationParameters sip = (StatefulServiceInitializationParameters) this.serviceInitializationParameters;
+                    StatefulServiceContext sip = (StatefulServiceContext) this.serviceContext;
                     this.listeningAddress += sip.PartitionId + "/" + sip.ReplicaId + "/";
                 }
 

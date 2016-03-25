@@ -12,6 +12,7 @@ namespace PublicGateway
     using Common.Shared.Serializers;
     using Common.Shared.Websockets;
     using global::PublicGateway.Comms;
+    using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Communication.Client;
 
     public class PublicGatewayWebSocketConnectionHandler : IWebSocketConnectionHandler
@@ -30,11 +31,8 @@ namespace PublicGateway
                 new ServicePartitionClient<WsCommunicationClient>(
                     this.clientFactory,
                     ConnectionFactory.StockServiceUri,
-                    mrequest.PartitionKey
-                    )
-                {
-                    ListenerName = ServiceConst.ListenerWebsocket
-                };
+                    partitionKey: new ServicePartitionKey(mrequest.PartitionKey),
+                    listenerName: ServiceConst.ListenerWebsocket);
 
             return await serviceClient.InvokeWithRetryAsync(
                 async client => await client.SendReceiveAsync(wsrequest),

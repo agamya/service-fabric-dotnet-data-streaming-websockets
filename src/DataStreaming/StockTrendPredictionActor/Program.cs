@@ -11,7 +11,7 @@ namespace StockTrendPredictionActor
     using System.Threading;
     using Common.Shared.Logging;
     using Microsoft.ServiceFabric.Actors;
-
+    using Microsoft.ServiceFabric.Actors.Runtime;
     public static class Program
     {
         public static void Main(string[] args)
@@ -25,13 +25,12 @@ namespace StockTrendPredictionActor
 
                 LoggingSource.Initialize(ActorEventSource.Current.Message);
 
-                using (FabricRuntime fabricRuntime = FabricRuntime.Create())
-                {
-                    fabricRuntime.RegisterActor<StockTrendPredictionActor>();
-                    fabricRuntime.RegisterActor<NotificationActor>();
 
-                    Thread.Sleep(Timeout.Infinite);
-                }
+                ActorRuntime.RegisterActorAsync<StockTrendPredictionActor>().GetAwaiter().GetResult();
+                ActorRuntime.RegisterActorAsync<NotificationActor>().GetAwaiter().GetResult();
+
+                Thread.Sleep(Timeout.Infinite);
+                
             }
             catch (Exception e)
             {

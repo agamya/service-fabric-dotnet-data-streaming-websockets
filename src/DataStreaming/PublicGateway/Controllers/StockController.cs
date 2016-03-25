@@ -30,21 +30,21 @@ namespace PublicGateway.Controllers
         }
 
         [HttpGet]
-        public async Task<Product> Get(int id)
+        public Task<Product> Get(int id)
         {
             Logger.Debug(nameof(this.Get));
 
             IStockService stockService = ConnectionFactory.CreateStockService(id);
 
-            return await stockService.GetProduct(id);
+            return stockService.GetProduct(id);
         }
 
         [HttpGet]
-        public async Task<List<Product>> GetTopProductsOutOfStock()
+        public Task<List<Product>> GetTopProductsOutOfStock()
         {
             Logger.Debug(nameof(this.GetTopProductsOutOfStock));
 
-            return await Task.FromResult<List<Product>>(null);
+            return Task.FromResult<List<Product>>(null);
         }
     }
 }

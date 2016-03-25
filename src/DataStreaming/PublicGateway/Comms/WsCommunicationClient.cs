@@ -43,6 +43,10 @@ namespace PublicGateway.Comms
         /// </summary>
         public ResolvedServicePartition ResolvedServicePartition { get; set; }
 
+        public string ListenerName { get; set; }
+
+        public ResolvedServiceEndpoint Endpoint { get; set; }
+
         public async Task<byte[]> SendReceiveAsync(byte[] payload)
         {
             byte[] receiveBytes = new byte[10240];

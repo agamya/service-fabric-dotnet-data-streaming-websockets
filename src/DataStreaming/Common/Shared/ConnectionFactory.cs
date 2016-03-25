@@ -7,6 +7,8 @@ namespace Common.Shared
 {
     using System;
     using Microsoft.ServiceFabric.Actors;
+    using Microsoft.ServiceFabric.Actors.Client;
+    using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
     using StockAggregatorService.Interfaces;
     using StockService.Interfaces;
@@ -28,12 +30,12 @@ namespace Common.Shared
 
         public static IStockService CreateStockService(int productId)
         {
-            return ServiceProxy.Create<IStockService>(productId, StockServiceUri);
+            return ServiceProxy.Create<IStockService>(StockServiceUri, new ServicePartitionKey(productId));
         }
 
         public static IStockAggregatorService CreateStockAggregatorService(int productId)
         {
-            return ServiceProxy.Create<IStockAggregatorService>(productId, StockAggregatorServiceUri);
+            return ServiceProxy.Create<IStockAggregatorService>(StockAggregatorServiceUri, new ServicePartitionKey(productId));
         }
 
         public static IStockTrendPredictionActor CreateStockTrendPredictionActor(int productId)
