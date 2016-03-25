@@ -18,7 +18,6 @@ namespace PublicGateway
     internal class OwinCommunicationListener : ICommunicationListener
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(OwinCommunicationListener));
-
         private readonly string appRoot;
         private readonly IOwinAppBuilder startup;
         private readonly StatelessServiceContext serviceContext;

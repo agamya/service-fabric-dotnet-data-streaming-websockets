@@ -16,7 +16,7 @@ namespace PublicGateway.Test
     public class PublicGatewayWebSocketClient : IDisposable
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(PublicGatewayWebSocketClient));
-        WebSocketManager websocketManager = null;
+        private WebSocketManager websocketManager = null;
 
         public PublicGatewayWebSocketClient()
         {
@@ -56,7 +56,9 @@ namespace PublicGateway.Test
         public async Task<bool> ConnectAsync(Uri serviceAddress)
         {
             if (this.websocketManager == null)
+            {
                 this.websocketManager = new WebSocketManager();
+            }
 
             return await this.websocketManager.ConnectAsync(serviceAddress);
         }
@@ -87,7 +89,9 @@ namespace PublicGateway.Test
         public async Task<WsResponseMessage> SendReceiveAsync(WsRequestMessage msgspec, CancellationToken cancellationToken)
         {
             if (this.websocketManager == null)
+            {
                 throw new ApplicationException("SendReceiveAsync requires an open websocket client");
+            }
 
             // Serialize Msg payload
             IWsSerializer mserializer = new ProtobufWsSerializer();

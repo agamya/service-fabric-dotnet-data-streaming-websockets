@@ -10,6 +10,8 @@ namespace Common.Model
     [DataContract]
     public class ProductStockPrediction
     {
+        [DataMember] public bool Reorder;
+
         [DataMember]
         public int ProductId { get; set; }
 
@@ -21,8 +23,5 @@ namespace Common.Model
 
         [DataMember]
         public float Probability { get; set; }
-
-        [DataMember]
-        public bool Reorder;
     }
 }

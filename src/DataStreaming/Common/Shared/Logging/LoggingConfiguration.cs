@@ -21,7 +21,9 @@ namespace Common.Shared.Logging
         {
             CodePackageActivationContext codeContext = FabricRuntime.GetActivationContext();
             if (codeContext == null) // sanity check
+            {
                 throw new ApplicationException("CodePackageActivationContext is null");
+            }
 
             // let exceptions flow out, they will be traced downstream and the service won't start
             ConfigurationPackage configurationPackage = codeContext.GetConfigurationPackageObject(ConfigurationPackageName);
@@ -55,7 +57,9 @@ namespace Common.Shared.Logging
                 configurationPackage.Settings.Sections[ConfigurationSectionName].Parameters;
 
             if (!configurationParameters.Contains(LoggerKey))
+            {
                 return;
+            }
 
             this.Logger = configurationParameters[LoggerKey].Value;
         }

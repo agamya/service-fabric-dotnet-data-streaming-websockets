@@ -21,7 +21,6 @@ namespace PublicGateway.Comms
     public class WsCommunicationClient : ICommunicationClient
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WsCommunicationClient));
-
         private ClientWebSocket clientWebSocket = null;
 
         public WsCommunicationClient(string baseAddress)
@@ -70,7 +69,9 @@ namespace PublicGateway.Comms
         internal bool ValidateClient()
         {
             if (this.clientWebSocket == null)
+            {
                 return false;
+            }
 
             if (this.clientWebSocket.State != WebSocketState.Open && this.clientWebSocket.State != WebSocketState.Connecting)
             {
@@ -85,7 +86,9 @@ namespace PublicGateway.Comms
         internal bool ValidateClient(string endpoint)
         {
             if (this.BaseAddress == endpoint)
+            {
                 return true;
+            }
 
             this.clientWebSocket.Dispose();
             this.clientWebSocket = null;

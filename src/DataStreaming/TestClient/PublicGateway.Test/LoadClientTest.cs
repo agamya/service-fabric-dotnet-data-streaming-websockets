@@ -24,11 +24,9 @@ namespace PublicGateway.Test
             Http = 1
         };
 
-        const int ReportStatusMs = 5000; // Report status every X seconds
-
+        private const int ReportStatusMs = 5000; // Report status every X seconds
         public readonly List<int> ProductIdsToPurchase = new List<int>();
         public readonly List<int> ProductIdsToOrder = new List<int>();
-
         public int PurchaseTimes = 1000;
         private PublicGatewayHttpClient client;
 
@@ -82,9 +80,13 @@ namespace PublicGateway.Test
             {
                 taskArgs[i] = i;
                 if (testProtocolType == TestProtocolType.Http)
+                {
                     tasks[i] = this.DoWorkAsyncHttp(iterations, taskArgs[i], tasks.Length, maxProductsPerThread, delayMs);
+                }
                 else
+                {
                     tasks[i] = this.DoWorkAsyncWebSocket(iterations, taskArgs[i], tasks.Length, maxProductsPerThread, delayMs);
+                }
             }
             Task.WaitAll(tasks);
             sw.Stop();
@@ -115,7 +117,9 @@ namespace PublicGateway.Test
                 {
                     maxProductsPerThread--;
                     if (productListOffsetMin + maxProductsPerThread < productListOffsetMax)
+                    {
                         productListOffsetMax = productListOffsetMin + maxProductsPerThread;
+                    }
                 }
                 //Console.WriteLine("{0} to {1} to {2}", threadId, productListOffsetMin, productListOffsetMax);
 
@@ -159,15 +163,21 @@ namespace PublicGateway.Test
 
                         WsResponseMessage mresp = await websocketClient.SendReceiveAsync(mreq, CancellationToken.None);
                         if (mresp.Result == WsResult.Error)
+                        {
                             Console.WriteLine("Error: {0}", Encoding.UTF8.GetString(mresp.Value));
+                        }
 
                         if (mresp.Result != WsResult.Success)
+                        {
                             failedCounter++;
-                        
+                        }
+
                         iterations++;
 
                         if (delayMs > -1 && iterations < iterationsMax)
+                        {
                             await Task.Delay(delayMs);
+                        }
                     }
                     Console.WriteLine(
                         "Completed: " + OutputReport(threadId, immediateQuantity, productId, delayMs, failedCounter, iterations - 1, sw.ElapsedMilliseconds));
@@ -201,7 +211,9 @@ namespace PublicGateway.Test
                 {
                     maxProductsPerThread--;
                     if (productListOffsetMin + maxProductsPerThread < productListOffsetMax)
+                    {
                         productListOffsetMax = productListOffsetMin + maxProductsPerThread;
+                    }
                 }
                 //Console.WriteLine("{0} to {1} to {2}", threadId, productListOffsetMin, productListOffsetMax);
 
@@ -229,12 +241,16 @@ namespace PublicGateway.Test
 
                     string result = await this.client.ExecutePostAsync(ConnectionFactory.ReserveStockApiController, postProductModel);
                     if (!result.ToLower().Contains("success"))
+                    {
                         failedCounter++;
+                    }
 
                     iterations++;
 
                     if (delayMs > -1 && iterations < iterationsMax)
+                    {
                         await Task.Delay(delayMs);
+                    }
                 }
                 Console.WriteLine(
                     "Completed: " + OutputReport(threadId, immediateQuantity, productId, delayMs, failedCounter, iterations - 1, sw.ElapsedMilliseconds));

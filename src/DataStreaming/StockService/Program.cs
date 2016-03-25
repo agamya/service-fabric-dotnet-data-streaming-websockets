@@ -7,11 +7,11 @@ namespace StockService
 {
     using System;
     using System.Diagnostics;
-    using System.Fabric;
     using System.Net;
     using System.Threading;
     using Common.Shared.Logging;
     using Microsoft.ServiceFabric.Services.Runtime;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -24,14 +24,15 @@ namespace StockService
                 ServicePointManager.Expect100Continue = false;
 
                 LoggingSource.Initialize(ServiceEventSource.Current.Message);
-                
-                ServiceRuntime.RegisterServiceAsync("StockServiceType", context =>
-                    new StockService(context)).GetAwaiter().GetResult();
+
+                ServiceRuntime.RegisterServiceAsync(
+                    "StockServiceType",
+                    context =>
+                        new StockService(context)).GetAwaiter().GetResult();
 
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(StockService).Name);
 
                 Thread.Sleep(Timeout.Infinite);
-                
             }
             catch (Exception e)
             {

@@ -25,7 +25,7 @@ namespace PublicGateway
             fileOptions.EnableDefaultFiles = true;
             fileOptions.RequestPath = PathString.Empty;
             fileOptions.FileSystem = physicalFileSystem;
-            fileOptions.DefaultFilesOptions.DefaultFileNames = new[] { "Default.html" };
+            fileOptions.DefaultFilesOptions.DefaultFileNames = new[] {"Default.html"};
             fileOptions.StaticFileOptions.FileSystem = fileOptions.FileSystem = physicalFileSystem;
             fileOptions.StaticFileOptions.ServeUnknownFileTypes = true;
 

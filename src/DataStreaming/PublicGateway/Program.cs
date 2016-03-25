@@ -7,11 +7,11 @@ namespace PublicGateway
 {
     using System;
     using System.Diagnostics;
-    using System.Fabric;
     using System.Net;
     using System.Threading;
     using Common.Shared.Logging;
     using Microsoft.ServiceFabric.Services.Runtime;
+
     public class Program
     {
         public static void Main(string[] args)
@@ -24,9 +24,9 @@ namespace PublicGateway
                 ServicePointManager.Expect100Continue = false;
 
                 LoggingSource.Initialize(ServiceEventSource.Current.Message);
-                
+
                 ServiceRuntime.RegisterServiceAsync("PublicGatewayType", context => new PublicGateway(context)).GetAwaiter().GetResult();
-                
+
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, typeof(PublicGateway).Name);
 
                 Thread.Sleep(Timeout.Infinite);

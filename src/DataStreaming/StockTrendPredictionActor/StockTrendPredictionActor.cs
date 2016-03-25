@@ -21,9 +21,7 @@ namespace StockTrendPredictionActor
     public class StockTrendPredictionActor : Actor, IStockTrendPredictionActor
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockTrendPredictionActor));
-
         private int notificationAttempts;
-
         private IActorTimer notificationTimer;
         private IAzureMlClient mlClient;
 
@@ -32,7 +30,9 @@ namespace StockTrendPredictionActor
             Logger.Debug("{0}: {1} orders", nameof(this.ProcessPurchasesAsync), orders?.Count);
 
             if (orders == null)
+            {
                 return;
+            }
 
             //Dictionary<int, ProductStockTrend> ProductStockTrends
 
@@ -42,13 +42,14 @@ namespace StockTrendPredictionActor
 
                 DateTime now = DateTime.UtcNow;
 
-                Dictionary<int, ProductStockTrend> productStockTrends = 
+                Dictionary<int, ProductStockTrend> productStockTrends =
                     await this.StateManager.GetStateAsync<Dictionary<int, ProductStockTrend>>("ProductStockTrends");
 
                 foreach (ProductPurchase order in orders)
                 {
                     // Add this product trend if we don't track it yet
                     if (!productStockTrends.ContainsKey(order.ProductId))
+                    {
                         productStockTrends.Add(
                             order.ProductId,
                             new ProductStockTrend()
@@ -56,6 +57,7 @@ namespace StockTrendPredictionActor
                                 ProductId = order.ProductId,
                                 ProductName = order.ProductName
                             });
+                    }
 
                     ProductStockTrend trend = productStockTrends[order.ProductId];
                     trend.Reset(now.AddMonths(-1), DateTime.UtcNow);
@@ -79,12 +81,14 @@ namespace StockTrendPredictionActor
             try
             {
                 await this.StateManager.TryAddStateAsync<Dictionary<int, ProductStockTrend>>("ProductStockTrends", new Dictionary<int, ProductStockTrend>());
-               
+
                 TimeSpan startDelay = TimeSpan.Parse(ConfigurationHelper.ReadValue("AppSettings", "PredictionTimerStartDelay"));
                 TimeSpan interval = TimeSpan.Parse(ConfigurationHelper.ReadValue("AppSettings", "PredictionTimerInterval"));
 
                 if (!int.TryParse(ConfigurationHelper.ReadValue("AppSettings", "PredictionNotificationAttempts"), out this.notificationAttempts))
+                {
                     this.notificationAttempts = 10;
+                }
 
                 // register timer to regularly check for updates
                 this.notificationTimer = this.RegisterTimer(
@@ -105,11 +109,10 @@ namespace StockTrendPredictionActor
             }
         }
 
-
         private async Task CalculatePredictionsAsync(IEnumerable<int> productIds)
         {
             Logger.Debug(nameof(this.CalculatePredictionsAsync));
-            
+
             Dictionary<int, ProductStockTrend> productTrends =
                 await this.StateManager.GetStateAsync<Dictionary<int, ProductStockTrend>>("ProductStockTrends");
 

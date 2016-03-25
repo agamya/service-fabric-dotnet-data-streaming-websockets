@@ -9,8 +9,8 @@ namespace StockTrendPredictionActor
     using System.Diagnostics.Tracing;
     using System.Fabric;
     using System.Threading.Tasks;
-    using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Runtime;
+
     [EventSource(Name = "MyCompany-PredictiveBackend-StockTrendPredictionActor")]
     internal sealed class ActorEventSource : EventSource
     {
@@ -70,6 +70,7 @@ namespace StockTrendPredictionActor
                 this.WriteEvent(MessageEventId, message);
             }
         }
+
         [NonEvent]
         public void ActorMessage(ActorBase actor, string message, params object[] args)
         {

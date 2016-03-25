@@ -1,14 +1,17 @@
-﻿using Microsoft.ServiceFabric.Data;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
 
 namespace Common.Shared
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.ServiceFabric.Data;
+
     public static class IAsyncEnumerableExtensions
     {
         /// <summary>
@@ -58,7 +61,7 @@ namespace Common.Shared
         public static async Task<int> CountAsync<TSource>(this IAsyncEnumerable<TSource> source, Func<TSource, bool> predicate)
         {
             int count = 0;
-            using (var asyncEnumerator = source.GetAsyncEnumerator())
+            using (IAsyncEnumerator<TSource> asyncEnumerator = source.GetAsyncEnumerator())
             {
                 while (await asyncEnumerator.MoveNextAsync(CancellationToken.None).ConfigureAwait(false))
                 {
@@ -96,18 +99,14 @@ namespace Common.Shared
     internal struct AsyncEnumeratorWrapper<TSource> : IEnumerator<TSource>
     {
         private IAsyncEnumerator<TSource> source;
-        private TSource current;
 
         public AsyncEnumeratorWrapper(IAsyncEnumerator<TSource> source)
         {
             this.source = source;
-            this.current = default(TSource);
+            this.Current = default(TSource);
         }
 
-        public TSource Current
-        {
-            get { return this.current; }
-        }
+        public TSource Current { get; private set; }
 
         object IEnumerator.Current
         {
@@ -125,7 +124,7 @@ namespace Common.Shared
                 return false;
             }
 
-            this.current = this.source.Current;
+            this.Current = this.source.Current;
             return true;
         }
 

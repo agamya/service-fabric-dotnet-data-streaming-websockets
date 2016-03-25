@@ -12,7 +12,7 @@ namespace PublicGateway
     using Microsoft.AspNet.SignalR;
     using StockTrendPredictionActor.Interfaces;
 
-    class StockEventsHandler : IStockEvents
+    internal class StockEventsHandler : IStockEvents
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockEventsHandler));
 

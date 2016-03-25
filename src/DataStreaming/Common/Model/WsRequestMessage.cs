@@ -11,9 +11,7 @@ namespace Common.Model
     public class WsRequestMessage
     {
         [ProtoMember(1)] public int PartitionKey;
-
         [ProtoMember(2)] public string Operation;
-
         [ProtoMember(3)] public byte[] Value;
     }
 }

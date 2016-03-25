@@ -11,7 +11,6 @@ namespace Common.Model
     public class WsResponseMessage
     {
         [ProtoMember(1)] public int Result;
-
         [ProtoMember(2)] public byte[] Value;
     }
 }

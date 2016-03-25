@@ -6,8 +6,6 @@
 namespace PublicGateway.Comms
 {
     using System;
-    using System.Net;
-    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Common.Logging;
@@ -19,7 +17,6 @@ namespace PublicGateway.Comms
     public class WsCommunicationClientFactory : CommunicationClientFactoryBase<WsCommunicationClient>
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WsCommunicationClientFactory));
-
         private static readonly TimeSpan MaxRetryBackoffIntervalOnNonTransientErrors = TimeSpan.FromSeconds(3);
 
         protected override bool ValidateClient(WsCommunicationClient client)
@@ -40,11 +37,15 @@ namespace PublicGateway.Comms
             Logger.Debug("CreateClientAsync: {0}", endpoint);
 
             if (string.IsNullOrEmpty(endpoint) || !endpoint.StartsWith("ws"))
+            {
                 throw new InvalidOperationException("The endpoint address is not valid. Please resolve again.");
+            }
 
             string endpointAddress = endpoint;
             if (!endpointAddress.EndsWith("/"))
+            {
                 endpointAddress = endpointAddress + "/";
+            }
 
             // Create a communication client. This doesn't establish a session with the server.
             WsCommunicationClient client = new WsCommunicationClient(endpointAddress);
@@ -58,6 +59,5 @@ namespace PublicGateway.Comms
             // Http communication doesn't maintain a communication channel, so nothing to abort.
             Logger.Debug("AbortClient");
         }
-        
     }
 }

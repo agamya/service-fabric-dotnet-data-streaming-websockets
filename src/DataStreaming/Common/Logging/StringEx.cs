@@ -12,7 +12,9 @@ namespace Common.Logging
         internal static string SafeFormat(string fmt, params object[] args)
         {
             if (fmt == null)
+            {
                 fmt = string.Empty;
+            }
 
             if (args != null && args.Length > 0)
             {

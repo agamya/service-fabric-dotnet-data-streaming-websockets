@@ -8,7 +8,6 @@ namespace StockService
     using System;
     using System.Collections.Generic;
     using System.Fabric;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Common.Logging;
@@ -29,15 +28,14 @@ namespace StockService
         private const string ProductsCollectionName = "products";
         private const string OrdersCollectionName = "orders";
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockService));
-
         private TimeSpan processOrdersInterval;
-
         private IReliableDictionary<int, Product> productsCollection = null;
         private IReliableDictionary<string, ProductPurchase> purchaseLog = null;
 
         public StockService(StatefulServiceContext context)
             : base(context)
-        { }
+        {
+        }
 
         public async Task<Product> GetProduct(int productId)
         {
@@ -63,9 +61,13 @@ namespace StockService
                     Product product = item.HasValue ? item.Value : null;
 
                     if (product == null)
+                    {
                         throw new ArgumentException("product not found", nameof(productId));
+                    }
                     if (product.StockTotal < quantity)
+                    {
                         return -1;
+                    }
 
                     int reserved = Math.Min(product.StockTotal, quantity);
                     int targetStockReserved = product.StockReserved + reserved;
@@ -122,7 +124,9 @@ namespace StockService
                 Product product = item.HasValue ? item.Value : null;
 
                 if (product == null)
+                {
                     throw new ArgumentException("product not found", nameof(productId));
+                }
 
                 int targetStockTotal = product.StockTotal + quantity;
 
@@ -133,6 +137,36 @@ namespace StockService
 
                 return true;
             }
+        }
+
+        /// <summary>
+        /// IWebSocketListener.ProcessWsMessageAsync
+        /// </summary>
+        public async Task<byte[]> ProcessWsMessageAsync(byte[] wsrequest, CancellationToken cancellationToken)
+        {
+            Logger.Debug(nameof(this.ProcessWsMessageAsync));
+
+            ProtobufWsSerializer mserializer = new ProtobufWsSerializer();
+
+            WsRequestMessage mrequest = await mserializer.DeserializeAsync<WsRequestMessage>(wsrequest);
+
+            switch (mrequest.Operation)
+            {
+                case WSOperations.AddItem:
+                {
+                    IWsSerializer pserializer = SerializerFactory.CreateSerializer();
+                    PostProductModel payload = await pserializer.DeserializeAsync<PostProductModel>(mrequest.Value);
+                    await this.PurchaseProduct(payload.ProductId, payload.Quantity);
+                }
+                    break;
+            }
+
+            WsResponseMessage mresponse = new WsResponseMessage
+            {
+                Result = WsResult.Success
+            };
+
+            return await mserializer.SerializeAsync(mresponse);
         }
 
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
@@ -157,11 +191,13 @@ namespace StockService
             try
             {
                 if (this.Partition.PartitionInfo.Kind != ServicePartitionKind.Int64Range)
+                {
                     throw new ApplicationException("Partition kind is not Int64Range");
+                }
 
-                Int64RangePartitionInformation partitionInfo = (Int64RangePartitionInformation)this.Partition.PartitionInfo;
-                int lowId = (int)partitionInfo.LowKey;
-                int highId = (int)partitionInfo.HighKey;
+                Int64RangePartitionInformation partitionInfo = (Int64RangePartitionInformation) this.Partition.PartitionInfo;
+                int lowId = (int) partitionInfo.LowKey;
+                int highId = (int) partitionInfo.HighKey;
 
                 //bulk-import test data from CSV files
                 Logger.Debug("attempting to bulk-import data");
@@ -174,7 +210,9 @@ namespace StockService
                     await this.StateManager.GetOrAddAsync<IReliableDictionary<string, ProductPurchase>>(OrdersCollectionName);
 
                 if (!TimeSpan.TryParse(ConfigurationHelper.ReadValue("AppSettings", "ProcessOrdersInterval"), out this.processOrdersInterval))
+                {
                     this.processOrdersInterval = TimeSpan.FromSeconds(3);
+                }
 
                 //check if data has been imported
                 using (ITransaction tx = this.StateManager.CreateTransaction())
@@ -204,7 +242,6 @@ namespace StockService
             }
         }
 
-
         /// <summary>
         /// Sends the current purchaseLog to StockTrendPredictionActor
         /// </summary>
@@ -216,7 +253,9 @@ namespace StockService
             {
                 await Task.Delay(this.processOrdersInterval, cancellationToken);
                 if (cancellationToken.IsCancellationRequested)
+                {
                     return;
+                }
 
                 try
                 {
@@ -230,14 +269,11 @@ namespace StockService
 
                         // in real world you should use .Take() to selecte only limited number of orders
                         // and those in batches
-                        List<ProductPurchase> orders = new List<ProductPurchase>((int)purchaseCount);
+                        List<ProductPurchase> orders = new List<ProductPurchase>((int) purchaseCount);
 
                         IAsyncEnumerable<KeyValuePair<string, ProductPurchase>> enumerable = await this.purchaseLog.CreateEnumerableAsync(tx);
 
-                        await (enumerable.ForeachAsync(cancellationToken, item =>
-                        {
-                            orders.Add(item.Value);
-                        }));
+                        await (enumerable.ForeachAsync(cancellationToken, item => { orders.Add(item.Value); }));
 
 
                         Logger.Debug("DispatchPurchaseLogAsync: {0} orders to process", orders.Count);
@@ -273,36 +309,6 @@ namespace StockService
                     // do not throw out the exception, just keep iterating
                 }
             }
-        }
-
-        /// <summary>
-        /// IWebSocketListener.ProcessWsMessageAsync
-        /// </summary>
-        public async Task<byte[]> ProcessWsMessageAsync(byte[] wsrequest, CancellationToken cancellationToken)
-        {
-            Logger.Debug(nameof(this.ProcessWsMessageAsync));
-
-            ProtobufWsSerializer mserializer = new ProtobufWsSerializer();
-
-            WsRequestMessage mrequest = await mserializer.DeserializeAsync<WsRequestMessage>(wsrequest);
-
-            switch (mrequest.Operation)
-            {
-                case WSOperations.AddItem:
-                    {
-                        IWsSerializer pserializer = SerializerFactory.CreateSerializer();
-                        PostProductModel payload = await pserializer.DeserializeAsync<PostProductModel>(mrequest.Value);
-                        await this.PurchaseProduct(payload.ProductId, payload.Quantity);
-                    }
-                    break;
-            }
-
-            WsResponseMessage mresponse = new WsResponseMessage
-            {
-                Result = WsResult.Success
-            };
-
-            return await mserializer.SerializeAsync(mresponse);
         }
     }
 }

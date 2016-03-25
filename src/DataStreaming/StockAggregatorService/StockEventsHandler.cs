@@ -13,16 +13,18 @@ namespace StockAggregatorService
     using Microsoft.ServiceFabric.Data.Collections;
     using StockTrendPredictionActor.Interfaces;
 
-    class StockEventsHandler : IStockEvents
+    internal class StockEventsHandler : IStockEvents
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockEventsHandler));
-
         private readonly string productsCollectionName;
         private readonly IReliableStateManager stateManager;
 
         public StockEventsHandler(IReliableStateManager stateMgr, string productsCollectionName)
         {
-            if (stateMgr == null) throw new ArgumentNullException(nameof(this.stateManager));
+            if (stateMgr == null)
+            {
+                throw new ArgumentNullException(nameof(this.stateManager));
+            }
             this.stateManager = stateMgr;
 
             this.productsCollectionName = productsCollectionName;
@@ -38,7 +40,9 @@ namespace StockAggregatorService
             using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 foreach (ProductStockPrediction prediction in productPredictions)
+                {
                     await productsCollection.SetAsync(tx, prediction.ProductId, prediction);
+                }
 
                 await tx.CommitAsync();
             }

@@ -22,14 +22,10 @@ namespace Common.Shared.Websockets
 
     public class WebSocketListener : ICommunicationListener
     {
-        private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WebSocketListener));
-
         private const int MaxBufferSize = 102400;
-
+        private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WebSocketListener));
         private readonly string appRoot;
-
         private readonly ServiceContext serviceContext;
-
         private readonly Func<IWebSocketConnectionHandler> createConnectionHandler;
         private readonly string serviceEndpoint;
         private string listeningAddress;
@@ -120,7 +116,9 @@ namespace Common.Shared.Websockets
                 {
                     // allow a few seconds to complete the main loop
                     if (!this.mainLoop.Wait(TimeSpan.FromSeconds(3)))
+                    {
                         Logger.Warning("MainLoop did not complete within allotted time");
+                    }
 
                     this.mainLoop.Dispose();
                     this.mainLoop = null;
@@ -168,7 +166,9 @@ namespace Common.Shared.Websockets
                     try
                     {
                         if (receiveBuffer == null)
+                        {
                             receiveBuffer = new byte[MaxBufferSize];
+                        }
 
                         WebSocketReceiveResult receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), cancellationToken);
                         if (receiveResult.MessageType == WebSocketMessageType.Close)

@@ -17,9 +17,7 @@ namespace Common.Shared
     {
         public const string ProductsFile = "Common.Shared.Data.products.csv";
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(BulkDataSource));
-
         private static Random Rnd = new Random(DateTime.UtcNow.Millisecond);
-
 
         /// <summary>
         /// Reads all products from the baked in CSV file

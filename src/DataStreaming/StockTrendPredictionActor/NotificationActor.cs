@@ -10,7 +10,6 @@ namespace StockTrendPredictionActor
     using Common.Logging;
     using Common.Model;
     using global::StockTrendPredictionActor.Interfaces;
-    using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Runtime;
 
     [StatePersistence(StatePersistence.None)]

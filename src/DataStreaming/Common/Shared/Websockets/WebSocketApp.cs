@@ -37,7 +37,9 @@ namespace Common.Shared.Websockets
             try
             {
                 if (this.cancellationTokenSource != null && !this.cancellationTokenSource.IsCancellationRequested)
+                {
                     this.cancellationTokenSource.Cancel();
+                }
 
                 if (this.httpListener != null && this.httpListener.IsListening)
                 {
@@ -46,7 +48,9 @@ namespace Common.Shared.Websockets
                 }
 
                 if (this.cancellationTokenSource != null && !this.cancellationTokenSource.IsCancellationRequested)
+                {
                     this.cancellationTokenSource.Dispose();
+                }
             }
             catch (ObjectDisposedException)
             {
@@ -65,7 +69,9 @@ namespace Common.Shared.Websockets
         public void Init()
         {
             if (!this.address.EndsWith("/"))
+            {
                 this.address += "/";
+            }
 
             this.httpListener = new HttpListener();
             this.httpListener.Prefixes.Add(this.address);
@@ -90,20 +96,23 @@ namespace Common.Shared.Websockets
                 {
                     // check if the exception is caused due to cancellation
                     if (this.cancellationToken.IsCancellationRequested)
+                    {
                         return;
+                    }
 
                     Logger.Error(ex, "Error in GetContextAsync");
                     continue;
                 }
 
                 if (this.cancellationToken.IsCancellationRequested)
+                {
                     return;
+                }
 
                 // a new connection is established, dispatch to the callback function
                 this.DispatchConnectedContext(context, processActionAsync);
             }
         }
-
 
         private void DispatchConnectedContext(
             HttpListenerContext context,

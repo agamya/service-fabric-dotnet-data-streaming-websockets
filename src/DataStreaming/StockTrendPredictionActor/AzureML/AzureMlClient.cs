@@ -17,16 +17,19 @@ namespace StockTrendPredictionActor.AzureML
     public class AzureMlClient : IAzureMlClient
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(AzureMlClient));
-
         private readonly Uri serviceUri;
         private readonly string apiKey;
 
         public AzureMlClient(Uri serviceUri, string apiKey)
         {
             if (serviceUri == null)
+            {
                 throw new ArgumentNullException(nameof(serviceUri));
+            }
             if (apiKey == null)
+            {
                 throw new ArgumentNullException(nameof(apiKey));
+            }
 
             this.serviceUri = serviceUri;
             this.apiKey = apiKey;

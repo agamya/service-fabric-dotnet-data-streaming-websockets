@@ -41,8 +41,14 @@ namespace PublicGateway.Test
                     int quantityPerProduct = 1;
                     int delayMs = -1;
 
-                    if (args.Length > 1) quantityPerProduct = Convert.ToInt32(args[1]);
-                    if (args.Length > 2) delayMs = Convert.ToInt32(args[2]);
+                    if (args.Length > 1)
+                    {
+                        quantityPerProduct = Convert.ToInt32(args[1]);
+                    }
+                    if (args.Length > 2)
+                    {
+                        delayMs = Convert.ToInt32(args[2]);
+                    }
 
                     LoadClientTest loadTest = new LoadClientTest();
 
@@ -85,10 +91,22 @@ namespace PublicGateway.Test
                             throw new ArgumentException("Invalid streaming protocol 'http|websockets'");
                         }
                     }
-                    if (args.Length > 2) threadCount = Convert.ToInt32(args[2]);
-                    if (args.Length > 3) iterationsPerThread = Convert.ToInt32(args[3]);
-                    if (args.Length > 4) maxProductsPerThread = Convert.ToInt32(args[4]);
-                    if (args.Length > 5) delayMs = Convert.ToInt32(args[5]);
+                    if (args.Length > 2)
+                    {
+                        threadCount = Convert.ToInt32(args[2]);
+                    }
+                    if (args.Length > 3)
+                    {
+                        iterationsPerThread = Convert.ToInt32(args[3]);
+                    }
+                    if (args.Length > 4)
+                    {
+                        maxProductsPerThread = Convert.ToInt32(args[4]);
+                    }
+                    if (args.Length > 5)
+                    {
+                        delayMs = Convert.ToInt32(args[5]);
+                    }
 
                     // Print parameters
                     Console.WriteLine(
@@ -104,7 +122,9 @@ namespace PublicGateway.Test
                     LoadClientTest loadTest = new LoadClientTest();
                     BulkDataSource bulkDataSource = new BulkDataSource();
                     foreach (Product p in bulkDataSource.ReadAllProducts())
+                    {
                         loadTest.ProductIdsToPurchase.Add(p.ProductId);
+                    }
                     loadTest.Purchase_MultipleProductsInParametersRandomly_Stream(
                         testProtocolType,
                         threadCount,
@@ -128,7 +148,9 @@ namespace PublicGateway.Test
             }
 
             if (System.Diagnostics.Debugger.IsAttached)
+            {
                 Console.ReadLine();
+            }
         }
     }
 }

@@ -6,7 +6,6 @@
 namespace PublicGateway.Controllers
 {
     using System.Collections.Generic;
-    using System.Net.Http;
     using System.Threading.Tasks;
     using System.Web.Http;
     using Common.Logging;
@@ -17,7 +16,7 @@ namespace PublicGateway.Controllers
     public class StockAggregatorController : ApiController
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockAggregatorController));
-        
+
         [HttpPost]
         public async Task<IEnumerable<ProductStockPrediction>> GetProducts()
         {

@@ -17,11 +17,17 @@ namespace Common.Model
         }
 
         public int ProductId { get; set; }
+
         public int CategoryId { get; set; }
+
         public string ProductNumber { get; set; }
+
         public string ProductName { get; set; }
+
         public string ModelName { get; set; }
+
         public decimal StandardCost { get; set; }
+
         public decimal ListPrice { get; set; }
 
         /// <summary>

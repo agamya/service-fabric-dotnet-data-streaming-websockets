@@ -6,12 +6,11 @@
 namespace StockTrendPredictionActor
 {
     using System;
-    using System.Fabric;
     using System.Net;
     using System.Threading;
     using Common.Shared.Logging;
-    using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Runtime;
+
     public static class Program
     {
         public static void Main(string[] args)
@@ -30,7 +29,6 @@ namespace StockTrendPredictionActor
                 ActorRuntime.RegisterActorAsync<NotificationActor>().GetAwaiter().GetResult();
 
                 Thread.Sleep(Timeout.Infinite);
-                
             }
             catch (Exception e)
             {

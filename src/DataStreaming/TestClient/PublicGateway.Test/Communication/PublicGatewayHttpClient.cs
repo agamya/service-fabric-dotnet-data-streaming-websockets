@@ -17,7 +17,6 @@ namespace PublicGateway.Test
     public class PublicGatewayHttpClient
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(PublicGatewayHttpClient));
-
         private HttpClient httpClient;
 
         public PublicGatewayHttpClient()

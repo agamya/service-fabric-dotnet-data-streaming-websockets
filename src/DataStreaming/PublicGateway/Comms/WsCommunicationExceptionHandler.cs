@@ -1,15 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
-using Common.Logging;
-using Microsoft.ServiceFabric.Services.Communication.Client;
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
 
 namespace PublicGateway.Comms
 {
+    using System;
+    using System.Net;
+    using System.Net.Http;
+    using Common.Logging;
+    using Microsoft.ServiceFabric.Services.Communication.Client;
+
     public class WsCommunicationExceptionHandler : IExceptionHandler
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WsCommunicationClientFactory));
@@ -34,7 +35,7 @@ namespace PublicGateway.Comms
 
             if (e is HttpRequestException)
             {
-                HttpRequestException he = (HttpRequestException)e;
+                HttpRequestException he = (HttpRequestException) e;
 
                 // this should not happen, but let's do a sanity check
                 if (null == he.InnerException)
@@ -48,7 +49,7 @@ namespace PublicGateway.Comms
 
             if (e is WebException)
             {
-                WebException we = (WebException)e;
+                WebException we = (WebException) e;
                 HttpWebResponse errorResponse = we.Response as HttpWebResponse;
 
                 if (we.Status == WebExceptionStatus.ProtocolError)
@@ -83,6 +84,6 @@ namespace PublicGateway.Comms
 
             result = new ExceptionHandlingRetryResult(e, false, retrySettings, retrySettings.DefaultMaxRetryCount);
             return true;
-        } 
+        }
     }
 }

@@ -18,20 +18,15 @@ namespace StockTrendPredictionActor
     [DataContract]
     public class ProductStockTrend
     {
-        [DataMember]
-        public List<PurchaseTag> PurchaseHistory;
+        [DataMember] public List<PurchaseTag> PurchaseHistory;
 
-        [DataMember]
-        public DateTime MinDate;
+        [DataMember] public DateTime MinDate;
 
-        [DataMember]
-        public DateTime MaxDate;
+        [DataMember] public DateTime MaxDate;
 
-        [DataMember]
-        public bool Reorder;
+        [DataMember] public bool Reorder;
 
-        [DataMember]
-        public int NotificationCounter;
+        [DataMember] public int NotificationCounter;
 
         [DataMember]
         public DateTime LastOrderTimestamp { get; set; }
@@ -80,7 +75,9 @@ namespace StockTrendPredictionActor
             this.MaxDate = maxDate;
 
             if (this.PurchaseHistory == null)
+            {
                 this.PurchaseHistory = new List<PurchaseTag>();
+            }
 
             this.PurchaseHistory = this.PurchaseHistory.Where(o => o.Date > minDate).ToList();
         }
@@ -88,7 +85,9 @@ namespace StockTrendPredictionActor
         public void AddOrder(ProductPurchase purchase, int notificationAttempts)
         {
             if (this.PurchaseHistory == null)
+            {
                 this.PurchaseHistory = new List<PurchaseTag>();
+            }
 
             this.PurchaseHistory.Add(new PurchaseTag {Date = purchase.Timestamp, Quantity = purchase.Quantity});
 

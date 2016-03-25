@@ -8,7 +8,6 @@ namespace Common.Model
     public static class WsResult
     {
         public const int Success = 0;
-
         public const int Error = 100;
     }
 }

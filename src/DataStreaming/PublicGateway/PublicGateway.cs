@@ -13,18 +13,17 @@ namespace PublicGateway
     using Common.Logging;
     using Common.Shared;
     using Common.Shared.Websockets;
-    using Microsoft.ServiceFabric.Actors;
+    using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
     using StockTrendPredictionActor.Interfaces;
-    using Microsoft.ServiceFabric.Actors.Client;
 
     public class PublicGateway : StatelessService
     {
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(PublicGateway));
 
         public PublicGateway(StatelessServiceContext context)
-            : base (context)
+            : base(context)
         {
         }
 

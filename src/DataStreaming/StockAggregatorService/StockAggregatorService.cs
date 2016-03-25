@@ -15,14 +15,13 @@ namespace StockAggregatorService
     using Common.Model;
     using Common.Shared;
     using global::StockAggregatorService.Interfaces;
-    using Microsoft.ServiceFabric.Actors;
+    using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
     using StockTrendPredictionActor.Interfaces;
-    using Microsoft.ServiceFabric.Actors.Client;
 
     public class StockAggregatorService : StatefulService, IStockAggregatorService
     {
@@ -30,9 +29,8 @@ namespace StockAggregatorService
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(StockAggregatorService));
 
         public StockAggregatorService(StatefulServiceContext context)
-            : base (context)
+            : base(context)
         {
-
         }
 
         public async Task<IEnumerable<ProductStockPrediction>> GetAllProducts()
@@ -44,7 +42,6 @@ namespace StockAggregatorService
 
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-
                 return (await productsCollection.CreateEnumerableAsync(tx)).ToEnumerable()
                     .OrderByDescending(p => p.Value.Probability)
                     .Select(p => p.Value);

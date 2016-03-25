@@ -28,7 +28,9 @@ namespace PublicGateway.Controllers
         {
             Logger.Debug(nameof(this.ReserveProduct));
             if (model == null)
+            {
                 throw new ArgumentNullException(nameof(model));
+            }
 
             try
             {
@@ -38,7 +40,9 @@ namespace PublicGateway.Controllers
                 int stockLeft = await stockService.PurchaseProduct(model.ProductId, model.Quantity);
 
                 if (stockLeft == -1)
+                {
                     return this.Request.CreateResponse<string>(HttpStatusCode.NoContent, string.Format("Failure: not enough stock left={0}", stockLeft));
+                }
 
                 return this.Request.CreateResponse<string>(HttpStatusCode.OK, string.Format("Success: stock left={0}", stockLeft));
             }

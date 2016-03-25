@@ -18,12 +18,9 @@ namespace Common.Shared
     {
         public static readonly string WebSocketServerName = @"ws://localhost:3251/PublicGatewayWS/";
         public static readonly string PublicGatewayApi = "http://localhost:3251/api/";
-
         public static readonly string ReserveStockApiController = PublicGatewayApi + "reservestock";
         public static readonly string StockApiController = PublicGatewayApi + "stockaggregator";
         public static readonly string StockAggregatorApiController = PublicGatewayApi + "stock";
-
-
         public static readonly Uri StockAggregatorServiceUri = new Uri("fabric:/PredictiveBackend/StockAggregatorService");
         public static readonly Uri StockServiceUri = new Uri("fabric:/PredictiveBackend/StockService");
         private static readonly string ApplicationName = "fabric:/PredictiveBackend";

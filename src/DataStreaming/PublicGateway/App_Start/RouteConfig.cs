@@ -28,8 +28,8 @@ namespace PublicGateway
             config.Routes.MapHttpRoute(
                 name: "StockAggregator",
                 routeTemplate: "stockaggregator",
-                defaults: new { controller = "StockAggregator", action = "Index" },
-                constraints: new { }
+                defaults: new {controller = "StockAggregator", action = "Index"},
+                constraints: new {}
                 );
 
             config.Routes.MapHttpRoute(

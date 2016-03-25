@@ -14,10 +14,10 @@ namespace PublicGateway.Test
 
     public class WebSocketManager : IDisposable
     {
-        const int MaxBufferSize = 10240;
+        private const int MaxBufferSize = 10240;
         private static readonly ILogger Logger = LoggerFactory.GetLogger(nameof(WebSocketManager));
-        ClientWebSocket clientWebSocket = null;
-        byte[] receiveBytes = new byte[MaxBufferSize];
+        private ClientWebSocket clientWebSocket = null;
+        private byte[] receiveBytes = new byte[MaxBufferSize];
 
         public void Dispose()
         {
@@ -83,7 +83,9 @@ namespace PublicGateway.Test
                 if (this.clientWebSocket != null)
                 {
                     if (this.clientWebSocket.State != WebSocketState.Closed)
+                    {
                         await this.clientWebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    }
                     this.clientWebSocket.Dispose();
                 }
             }

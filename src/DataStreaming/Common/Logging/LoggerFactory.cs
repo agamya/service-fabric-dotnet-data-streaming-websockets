@@ -18,7 +18,9 @@ namespace Common.Logging
         public static void SetFactory(Func<string, ILogger> defaultFactory)
         {
             if (null != defaultFactory)
+            {
                 _defaultFactory = defaultFactory;
+            }
         }
 
         public static ILogger GetLogger()
@@ -29,7 +31,9 @@ namespace Common.Logging
         public static ILogger GetLogger(string logName)
         {
             if (string.IsNullOrEmpty(logName))
+            {
                 logName = "Default";
+            }
 
             return _loggers.GetOrAdd(logName, name => _defaultFactory(name));
         }
